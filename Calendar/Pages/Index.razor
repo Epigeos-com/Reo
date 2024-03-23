@@ -1,15 +1,14 @@
 ﻿@page "/"
 
-<p>@GregorianToDate(calendarType.Attic, new DateTime(2024, 12, 31))</p>
-<p>@GregorianToDate(calendarType.Attic, new DateTime(2025, 6, 21))</p>
-<p>@GregorianToDate(calendarType.Attic, new DateTime(2025, 12, 12))</p>
-<p>@GregorianToDate(calendarType.Attic, new DateTime(2025, 12, 20))</p>
-<p>@GregorianToDate(calendarType.Attic, new DateTime(2025, 12, 21))</p>
-<p>@GregorianToDate(calendarType.Attic, new DateTime(2025, 12, 22))</p>
+<p>@GregorianToDate(CalendarType.Attic, new DateTime(2024, 6, 3)) : @GetDateInfo(CalendarType.Attic, new DateTime(2024, 6, 3)).monthName</p>
+<p>@GregorianToDate(CalendarType.Attic, new DateTime(2024, 6, 20)) : @GetDateInfo(CalendarType.Attic, new DateTime(2024, 6, 20)).monthName</p>
+<p>@GregorianToDate(CalendarType.Attic, new DateTime(2022, 12, 2)) : @GetDateInfo(CalendarType.Attic, new DateTime(2022, 12, 2)).monthName</p>
+<p>@GregorianToDate(CalendarType.Attic, new DateTime(2022, 12, 31)) : @GetDateInfo(CalendarType.Attic, new DateTime(2022, 12, 31)).monthName</p>
+<p>@currentCalendarData.yearName</p>
 
-<p style="text-align:center; position:absolute; width: 100%">@monthName</p>
-<p style="position:absolute; width: 33%; margin-right: 33%" @onclick="() => ChangeDate(months:-1)">◀</p>
-<p style="text-align:right; position:absolute; width: 33%; margin-left: 67%" @onclick="() => ChangeDate(months:1)">▶</p>
+<p style="text-align:center; position:absolute; width: 100%">@currentCalendarData.monthName</p>
+<p style="position:absolute; width: 33%; margin-right: 33%" @onclick="() => ChangeDate(CalendarType.Gregorian, months:-1)">◀</p>
+<p style="text-align:right; position:absolute; width: 33%; margin-left: 67%" @onclick="() => ChangeDate(CalendarType.Gregorian, months:1)">▶</p>
 
 <ul class="days">
     @GetDayListHtml()
@@ -28,8 +27,8 @@
     .days li {
         list-style-type: none;
         display: inline-block;
-        width: calc(100% / @rowSize);
-        height: calc(100% / @(Math.Max(Math.Ceiling((float)daysInMonth / rowSize), minRows)));
+        width: calc(100% / @currentCalendarData.rowSize);
+        height: calc(100% / @(Math.Max(Math.Ceiling((float)currentCalendarData.daysInMonth / currentCalendarData.rowSize), currentCalendarData.minRows)));
         text-align: center;
         font-size: 12px;
         color: #777;
@@ -50,77 +49,100 @@
 @code {
     protected override async Task OnInitializedAsync()
     {
-        RefreshYearData();
+        RefreshCalendarData();
     }
 
-    enum calendarType
+    enum CalendarType
     {
         Gregorian,
         Attic
     }
-    private calendarType calendar = calendarType.Attic;
+    private CalendarType calendar = CalendarType.Attic;
 
-    private int rowSize = 7;
-    private int minRows = 5;
-    private string monthName;
-
-    private int daysInMonth = 30;
-    private int monthsInYear = 12;
-
-    private int day = 1;
-    private int month = DateTime.Now.Month;
-    private int year = 2024;
-    private DateTime firstOfTheMonthInGregorian;
-    private DateTime firstOfTheYearInGregorian;
+    private DateInfo currentCalendarData = new();
+    private DateTime currentGregorianDate = new(2024, 3, 22, 0, 0, 0);
 
     private bool useLowPrecisionMoonPhaseCalculation;
+    private double longitude;
+    private double latitude;
+    // Attic
+    private int monthToDoubleInAttic = 5;
+    private string doubledMonthNameFormattingInAttic = "{originalName} II";
+    private string yearNameInAttic = "O{olympiad} Y{year}";
 
-    private void RefreshYearData()
+    private void RefreshCalendarData()
     {
-        var yearData = GetYearData(year);
-        monthsInYear = yearData.Item1;
-        rowSize = yearData.Item2;
-        minRows = yearData.Item3;
-        firstOfTheYearInGregorian = yearData.Item4;
-        RefreshMonthData();
+        currentCalendarData = GetDateInfo(calendar, currentGregorianDate);
     }
-    private void RefreshMonthData()
+    struct DateInfo
     {
-        var monthData = GetMonthData(month, year);
-        monthName = monthData.Item1;
-        daysInMonth = monthData.Item2;
-        firstOfTheMonthInGregorian = monthData.Item3;
+        public ValueTuple<int, int, double> date;
+        public DateTime firstOfTheYearInGregorian;
+        public DateTime firstOfTheMonthInGregorian;
+        public int monthsInYear = 12;
+        public int daysInMonth = 30;
+        public int rowSize = 7;
+        public int minRows = 5;
+        public string yearName = "2024";
+        public string monthName = "Invalid month";
+
+        public DateInfo(ValueTuple<int, int, double> date, DateTime firstOfTheYearInGregorian, DateTime firstOfTheMonthInGregorian, int monthsInYear, int daysInMonth, int rowSize, int minRows, string yearName, string monthName) : this()
+        {
+            this.date = date;
+            this.firstOfTheYearInGregorian = firstOfTheYearInGregorian;
+            this.firstOfTheMonthInGregorian = firstOfTheMonthInGregorian;
+            this.monthsInYear = monthsInYear;
+            this.daysInMonth = daysInMonth;
+            this.rowSize = rowSize;
+            this.minRows = minRows;
+            this.yearName = yearName;
+            this.monthName = monthName;
+        }
+        public DateInfo(DateTime firstOfTheYearInGregorian, DateTime firstOfTheMonthInGregorian, int monthsInYear, int daysInMonth, int rowSize, int minRows, string yearName, string monthName) : this()
+        {
+            this.firstOfTheYearInGregorian = firstOfTheYearInGregorian;
+            this.firstOfTheMonthInGregorian = firstOfTheMonthInGregorian;
+            this.monthsInYear = monthsInYear;
+            this.daysInMonth = daysInMonth;
+            this.rowSize = rowSize;
+            this.minRows = minRows;
+            this.yearName = yearName;
+            this.monthName = monthName;
+        }
+        public bool ContainsDate()
+        {
+            return date == default;
+        }
     }
-    private ValueTuple<int, int, int, DateTime> GetYearData(int year)
+    private DateInfo GetDateInfo(CalendarType calendar, DateTime gregorianDate)
     {
+        ValueTuple<int, int, double> outputDate = default;
+        DateTime firstOfTheYearInGregorian = default;
+        DateTime firstOfTheMonthInGregorian = default;
         var monthsInYear = 12;
+        var daysInMonth = 30;
         var rowSize = 7;
         var minRows = 5;
-        var firstOfTheYearInGregorian = new DateTime();
+        var yearName = "2024";
+        var monthName = "Invalid month";
 
-        if (calendar == calendarType.Gregorian)
+        var date = gregorianDate;
+        if (calendar == CalendarType.Gregorian)
         {
+            firstOfTheYearInGregorian = new(date.Year, 1, 1);
+            firstOfTheMonthInGregorian = new(date.Year, date.Month, 1);
+
+            outputDate = new(date.Year, date.Month, date.Day + date.Hour / 24 + date.Minute / 1440);
+
             monthsInYear = 12;
             rowSize = 7;
             minRows = 5;
-        }
-        else if (calendar == calendarType.Attic)
-        {
 
-        }
-        return new(monthsInYear, rowSize, minRows, firstOfTheYearInGregorian);
-    }
-    private ValueTuple<string, int, DateTime> GetMonthData(int month, int year)
-    {
-        var monthName = "Invalid month";
-        var daysInMonth = 30;
-        DateTime firstOfTheMonthInGregorian = new();
-        if (calendar == calendarType.Gregorian)
-        {
-            switch (month)
+            yearName = date.Year.ToString();
+            switch (date.Month)
             {
                 case 1: monthName = "January"; daysInMonth = 31; break;
-                case 2: monthName = "February"; if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) { daysInMonth = 29; } else { daysInMonth = 28; } break;
+                case 2: monthName = "February"; if ((date.Year % 4 == 0 && date.Year % 100 != 0) || date.Year % 400 == 0) { daysInMonth = 29; } else { daysInMonth = 28; } break;
                 case 3: monthName = "March"; daysInMonth = 31; break;
                 case 4: monthName = "April"; daysInMonth = 30; break;
                 case 5: monthName = "May"; daysInMonth = 31; break;
@@ -133,34 +155,58 @@
                 case 12: monthName = "December"; daysInMonth = 31; break;
                 default: monthName = "Invalid month"; daysInMonth = 100; break;
             };
-            firstOfTheMonthInGregorian = new(year, month, 1);
         }
-        else if (calendar == calendarType.Attic)
+        else if (calendar == CalendarType.Attic)
         {
-            monthName = month switch
+            firstOfTheYearInGregorian = FloorDateTime(GetClosestSummerSolstice(date, out var year, false));
+            firstOfTheYearInGregorian = GetClosestMoonPhase(firstOfTheYearInGregorian, out var k, true);
+
+            var nextFirstOfTheYearBasedOnSolstice = FloorDateTime(GetClosestSummerSolstice(date));
+
+            monthsInYear = 0;
+            var newMoon = firstOfTheYearInGregorian;
+            var monthBeginnings = new List<DateTime>();
+            while (newMoon <= nextFirstOfTheYearBasedOnSolstice)
             {
-                1 => "Ἑκατομβαιών",
-                2 => "Μεταγειτνιών",
-                3 => "Βοηδρομιών",
-                4 => "Πυανεψιών",
-                5 => "Μαιμακτηριών",
-                6 => "Ποσειδεών",
-                7 => "Γαμηλιών",
-                8 => "Ἀνθεστηριών",
-                9 => "Ἐλαφηβολιών",
-                10 => "Μουνυχιών",
-                11 => "Θαργηλιών",
-                12 => "Σκιροφοριών",
-                13 => "Πυανεψιών",
-                _ => "Invalid month"
-            };
+                monthBeginnings.Add(newMoon);
+                k++;
+                newMoon = GetDateForMoonPhase(k);
+                monthsInYear++;
+            }
+            var firstOfTheNextYear = GetDateForMoonPhase(k);
+
+            var unroundedFirstOfTheMonth = monthBeginnings.Where(element => element <= date).Max();
+            firstOfTheMonthInGregorian = FloorDateTime(unroundedFirstOfTheMonth);
+
+            year += 779;
+            var olympiad = Math.Floor((double)year / 4);
+            yearName = yearNameInAttic.Replace("{olympiad}", olympiad.ToString()).Replace("{year}", ((double)year - 4 * olympiad + 1).ToString()).Replace("{totalYear}", year.ToString());
+            var month = monthBeginnings.IndexOf(unroundedFirstOfTheMonth) + 1; // +1 beacuse of lists starting at 0
+            var day = (int)Math.Ceiling((date - firstOfTheMonthInGregorian).TotalDays) + 1; // +1 because days start at 1
+            outputDate = new(year, month, day);
+
+            var firstOfTheNextMonth = new DateTime();
+            try
+            {
+                firstOfTheNextMonth = FloorDateTime(monthBeginnings[month]);
+            }
+            catch
+            {
+                firstOfTheNextMonth = FloorDateTime(firstOfTheNextYear);
+            }
+            daysInMonth = (int)(firstOfTheNextMonth - firstOfTheMonthInGregorian).TotalDays;
+
+            List<string> monthNames = new() { "Ἑκατομβαιών", "Μεταγειτνιών", "Βοηδρομιών", "Πυανεψιών", "Μαιμακτηριών", "Ποσειδεών", "Γαμηλιών", "Ἀνθεστηριών", "Ἐλαφηβολιών", "Μουνυχιών", "Θαργηλιών", "Σκιροφοριών" };
+            if (monthsInYear == 13) monthNames.Insert(monthToDoubleInAttic + 1, doubledMonthNameFormattingInAttic.Replace("{originalName}", monthNames[monthToDoubleInAttic]));
+            monthName = monthNames[month - 1];
         }
-        return new(monthName, daysInMonth, firstOfTheMonthInGregorian);
+
+        return new(outputDate, firstOfTheYearInGregorian, firstOfTheMonthInGregorian, monthsInYear, daysInMonth, rowSize, minRows, yearName, monthName);
     }
 
-    private DateTime DateToGregorian(calendarType calendar, ValueTuple<int, int, double> date)
+    private DateTime DateToGregorian(CalendarType calendar, ValueTuple<int, int, double> date)
     {
-        if (calendar == calendarType.Attic)
+        if (calendar == CalendarType.Attic)
         {
 
         }
@@ -171,96 +217,73 @@
         return default;
     }
     //      ValueTuple<year, month, day>
-    private /*ValueTuple<int, int, double>*/ string GregorianToDate(calendarType calendar, DateTime date)
+    private ValueTuple<int, int, double> GregorianToDate(CalendarType calendar, DateTime date)
     {
-        if (calendar == calendarType.Attic)
+        if (calendar == CalendarType.Attic)
         {
-            var d = GetClosestSummerSolstice(date);
-            var nextFirstOfTheYearBasedOnSolstice = new DateTime(d.Year, d.Month, d.Day, 0, 0, 0);
-            if (d.Hour > 0) nextFirstOfTheYearBasedOnSolstice = nextFirstOfTheYearBasedOnSolstice.AddDays(1);
-
-            d = GetClosestSummerSolstice(date, false); // for year expressed in greek years, GetClosestSummerSolstice(new DateTime(gregorianYear, 1, 1))
-            var firstOfTheYearInGregorian = new DateTime(d.Year, d.Month, d.Day, 0, 0, 0);
-            if (d.Hour > 0) firstOfTheYearInGregorian = firstOfTheYearInGregorian.AddDays(1);
-            firstOfTheYearInGregorian = GetClosestMoonPhase(firstOfTheYearInGregorian, out var k, true);
-
-            var monthsInYear = 0;
-            var monthBeginnings = new List<DateTime>();
-            var newMoon = firstOfTheYearInGregorian;
-            while (newMoon <= nextFirstOfTheYearBasedOnSolstice)
-            {
-                monthBeginnings.Add(newMoon);
-                k++;
-                newMoon = GetDateForMoonPhase(k);
-                monthsInYear++;
-            }
-            var firstOfTheNextYear = GetDateForMoonPhase(k + 1);
-
-
-            d = monthBeginnings.Where(element => element <= date).Max();
-            var firstOfTheMonthInGregorian = new DateTime(d.Year, d.Month, d.Day, 0, 0, 0);
-            if (d.Hour > 0) firstOfTheMonthInGregorian = firstOfTheMonthInGregorian.AddDays(1);
-                    
-            var month = monthBeginnings.IndexOf(d) + 1; // +1 beacuse of lists starting at 0
-            var day = (int)Math.Ceiling((date - firstOfTheMonthInGregorian).TotalDays) + 1; // +1 because days start at 1
-
-            return date + " returns " + new ValueTuple<int, int, double>(date.Year, month, day).ToString() + " : " + firstOfTheMonthInGregorian + " : " + d;
-            // daysInMonth = (int)(firstOfTheNextMonth - firstOfTheMonthInGregorian).TotalDays;
-            // monthsInYear
+            var dateInfo = GetDateInfo(calendar, date);
+            return dateInfo.date;
         }
         else
         {
-            return new ValueTuple<int, int, double>(date.Year, date.Month, date.Day + date.Hour / 24 + date.Minute / 1440).ToString();
+            return new ValueTuple<int, int, double>(date.Year, date.Month, date.Day + date.Hour / 24 + date.Minute / 1440);
         }
     }
 
-    private void ChangeDate(int days = 0, int months = 0, int years = 0)
+    private void ChangeDate(CalendarType calendar, int days = 0, int months = 0, int years = 0)
     {
-        day += days;
-        month += months;
-        year += years;
+        if (calendar == CalendarType.Gregorian)
+        {
+            currentGregorianDate = currentGregorianDate.AddYears(years).AddMonths(months).AddDays(days);
+        }
+        else if (calendar == CalendarType.Attic)
+        {
+            /*dayGregorian += days;
+            monthGregorian += months;
+            yearGregorian += years;
 
-        while (month > monthsInYear)
-        {
-            year++;
-            month -= monthsInYear;
-        }
-        while (month < 1)
-        {
-            year--;
-            month += monthsInYear;
+            while (monthGregorian > monthsInYear)
+            {
+                yearGregorian++;
+                monthGregorian -= monthsInYear;
+            }
+            while (monthGregorian < 1)
+            {
+                yearGregorian--;
+                monthGregorian += monthsInYear;
+            }
+
+            while (dayGregorian > daysInMonth)
+            {
+                monthGregorian++;
+                dayGregorian -= daysInMonth;
+            }
+            while (dayGregorian < 1)
+            {
+                monthGregorian--;
+                dayGregorian += daysInMonth;
+            }*/
         }
 
-        while (day > daysInMonth)
-        {
-            month++;
-            day -= daysInMonth;
-        }
-        while (day < 1)
-        {
-            month--;
-            day += daysInMonth;
-        }
-
-        RefreshYearData();
+        RefreshCalendarData();
     }
 
     private MarkupString GetDayListHtml()
     {
-        if (year < 1000 || year > 3000) // convert the year to gregorian before checking
+        if (currentGregorianDate.Year < 1000 || currentGregorianDate.Year > 3000)
         {
             return (MarkupString)"Sorry, but the calendar only works in 1000-3000 Gregorian years";
         }
 
         var html = "";
-        for (int i = 1; i < daysInMonth + 1; i++)
+        for (int i = 1; i < currentCalendarData.daysInMonth + 1; i++)
         {
-            html += $"<li><div class=\"dayContent\">{i}({firstOfTheMonthInGregorian.Day + i - 1})</div></li>";
+            html += $"<li><div class=\"dayContent\">{i}({currentCalendarData.firstOfTheMonthInGregorian.Day + i - 1})</div></li>";
         }
-        var emptyBoxCount = Math.Max(minRows * rowSize - daysInMonth, 0);
-        if ((daysInMonth + emptyBoxCount) % rowSize != 0)
+        var emptyBoxCount = Math.Max(currentCalendarData.minRows * currentCalendarData.rowSize - currentCalendarData.daysInMonth, 0);
+        if ((currentCalendarData.daysInMonth + emptyBoxCount) % currentCalendarData.rowSize != 0)
         {
-            emptyBoxCount += rowSize - (daysInMonth + emptyBoxCount) % rowSize;
+            emptyBoxCount += currentCalendarData.rowSize - (currentCalendarData.daysInMonth + emptyBoxCount) % currentCalendarData.rowSize;
         }
         for (int i = 0; i < emptyBoxCount; i++)
         {
@@ -268,6 +291,13 @@
         }
 
         return (MarkupString)html;
+    }
+
+    private DateTime FloorDateTime(DateTime date)
+    {
+        var output = new DateTime(date.Year, date.Month, date.Day, 0, 0, 0);
+        if (date.Hour > 0) output = output.AddDays(1);
+        return output;
     }
 
     private double GregorianToJD(ValueTuple<int, int, double> date)
@@ -427,10 +457,21 @@
     }
     private DateTime GetClosestSummerSolstice(DateTime dateTime, bool isForward = true)
     {
+        return GetClosestSummerSolstice(dateTime, out var finalYear, isForward);
+    }
+    private DateTime GetClosestSummerSolstice(DateTime dateTime, out int finalYear, bool isForward = true)
+    {
         DateTime[] solstices = new DateTime[3] { GetSummerSolsticeForGregorianYear(dateTime.Year),
         GetSummerSolsticeForGregorianYear(dateTime.Year - 1),
         GetSummerSolsticeForGregorianYear(dateTime.Year + 1) };
 
-        return solstices.Where(element => isForward ? (element > dateTime) : (element < dateTime)).OrderBy(element => Math.Max((element - dateTime).TotalDays, (dateTime - element).TotalDays)).First();
+        var solstice = solstices.Where(element => isForward ? (element > dateTime) : (element < dateTime)).OrderBy(element => Math.Max((element - dateTime).TotalDays, (dateTime - element).TotalDays)).First();
+        finalYear = Array.IndexOf(solstices, solstice) switch
+        {
+            0 => dateTime.Year,
+            1 => dateTime.Year - 1,
+            _ => dateTime.Year + 1
+        };
+        return solstice;
     }
 }

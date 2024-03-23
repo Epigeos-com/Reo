@@ -29,7 +29,7 @@
     <AppXManifest Include="C:\Users\maxex\source\repos\Calendar\Calendar\bin\Debug\net7.0-windows10.0.19041.0\win10-x64\AppxManifest.xml">
       <PackagePath>AppxManifest.xml</PackagePath>
       <ReRegisterAppIfChanged>true</ReRegisterAppIfChanged>
-      <Modified>2024-03-21T21:24:43.726</Modified>
+      <Modified>2024-03-23T00:21:02.797</Modified>
     </AppXManifest>
   </ItemGroup>
   <ItemGroup>
@@ -43,11 +43,11 @@
     </AppxPackagedFile>
     <AppxPackagedFile Include="C:\Users\maxex\source\repos\Calendar\Calendar\bin\Debug\net7.0-windows10.0.19041.0\win10-x64\Calendar.dll">
       <PackagePath>Calendar.dll</PackagePath>
-      <Modified>2024-03-21T21:24:41.803</Modified>
+      <Modified>2024-03-23T00:19:49.632</Modified>
     </AppxPackagedFile>
     <AppxPackagedFile Include="C:\Users\maxex\source\repos\Calendar\Calendar\obj\Debug\net7.0-windows10.0.19041.0\win10-x64\apphost.exe">
       <PackagePath>Calendar.exe</PackagePath>
-      <Modified>2024-03-21T21:24:41.883</Modified>
+      <Modified>2024-03-23T00:19:49.710</Modified>
     </AppxPackagedFile>
     <AppxPackagedFile Include="C:\Users\maxex\.nuget\packages\microsoft.netcore.app.runtime.win-x64\7.0.7\runtimes\win-x64\lib\net7.0\Microsoft.CSharp.dll">
       <PackagePath>Microsoft.CSharp.dll</PackagePath>
@@ -987,7 +987,7 @@
     </AppxPackagedFile>
     <AppxPackagedFile Include="C:\Users\maxex\source\repos\Calendar\Calendar\obj\Debug\net7.0-windows10.0.19041.0\win10-x64\Calendar.deps.json">
       <PackagePath>Calendar.deps.json</PackagePath>
-      <Modified>2024-03-21T21:24:43.318</Modified>
+      <Modified>2024-03-23T00:21:02.647</Modified>
     </AppxPackagedFile>
     <AppxPackagedFile Include="C:\Program Files\dotnet\packs\Microsoft.Maui.Controls.Ref.win\7.0.86\ref\net7.0-windows10.0.19041\Microsoft.Maui.Controls.Compatibility.pri">
       <PackagePath>Microsoft.Maui.Controls.Compatibility.pri</PackagePath>
