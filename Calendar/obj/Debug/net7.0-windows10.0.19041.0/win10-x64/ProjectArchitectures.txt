@@ -1,1 +1,0 @@
-C:\Users\maxex\source\repos\Calendar\Calendar\Calendar.csproj;x64
