@@ -1,0 +1,61 @@
+// For 1.0:
+
+Add acurracy to the new astronomy stuff
+
+Presave astronomy events
+Add solstice events
+
+Add empty boxes at beginning of month too / add days of the week
+Add timezone support
+Add notifications
+
+Update navbar color to new background
+Style inputs
+Make dialog close button thinner
+Update info tab
+Make lightnode more brown
+
+Update settings saving and loading for new parameters and order
+?Cache for date info
+?Add all events screen
+?Add date formatting settings
+
+// To check
+Check if the new path saving works, including creating multiple directories at once and not checking whether they already exist
+Check icons
+Make sure time of day in attic works
+Check line break behavior in events
+
+Fix today detection
+
+// For 1.1 (or later):
+Show season
+Add alternative numerals related to the calendars
+Add the date in different calendars to day view
+Add translations
+Add themes
+Add eclipse events
+Make automatic resizing better
+Add event descriptions
+Add theme switching based on events
+Add twlilights, star visibility, moon phase, etc. in day view
+Add a clock section
+Add iCalendar import and export
+
+// Known issues:
+Pressing esc on settings before an input field is unselected/unclicked leads to it being assigned to a var after the StateHasChanged() runs, so it doesn't update on the page (that's just a guess for why)
+Setting latitude and longitude to current location needs at least two clicks of the button, which seems to be caused by how geolocation works, but tough to tell
+
+
+
+// Next calendar ideas:
+Julian
+French revolutionary calendar
+Armelin
+World
+
+Celtic
+Sumerian
+Egyptian
+Aztec
+Chinese
