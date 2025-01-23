@@ -1,6 +1,5 @@
 // For 1.0:
-
-Add acurracy to the new astronomy stuff
+Make time of day and properdate work
 
 Presave astronomy events
 Add solstice events
@@ -18,13 +17,9 @@ Make lightnode more brown
 Update settings saving and loading for new parameters and order
 ?Cache for date info
 ?Add all events screen
-?Add date formatting settings
 
 // To check
-Check if the new path saving works, including creating multiple directories at once and not checking whether they already exist
-Check icons
-Make sure time of day in attic works
-Check line break behavior in events
+Make sure complex events go right
 
 Fix today detection
 

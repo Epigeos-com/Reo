@@ -1,7 +1,7 @@
 const std = @import("std");
 const math = std.math;
-const dates = @import("Dates.zig");
-const settings = @import("Settings.zig");
+const dates = @import("dates.zig");
+const settings = @import("settings.zig");
 
 // k is which moon phase it is from the new moon of 6 Jan 2000 plus 0 for new moon, .25 for first quarter, .5 for full moon, .75 for last quarter(quarter phases not implemented yet)
 pub fn getDateForMoonPhase(k: f32) !f64 {
@@ -37,7 +37,7 @@ pub fn getDateForMoonPhase(k: f32) !f64 {
         JDE += -0.4072 * @sin(Mp) + 0.17241 * E * @sin(M) + 0.01608 * @sin(2 * Mp) + 0.01039 * @sin(2 * F) + 0.00739 * E * @sin(Mp - M) - 0.00514 * E * @sin(Mp + M) + 0.00208 * E * E * @sin(2 * M) - 0.00111 * @sin(Mp - 2 * F) - 0.00057 * @sin(Mp + 2 * F) + 0.00056 * E * @sin(2 * Mp + M) - 0.00042 * @sin(3 * Mp) + 0.00042 * E * @sin(M + 2 * F) + 0.00038 * E * @sin(M - 2 * F) - 0.00024 * E * @sin(2 * Mp - M) - 0.00017 * @sin(Omega) - 0.00007 * @sin(Mp + 2 * M) + 0.00004 * @sin(2 * Mp - 2 * F) + 0.00004 * @sin(3 * M) + 0.00003 * @sin(Mp + M - 2 * F) + 0.00003 * @sin(2 * Mp + 2 * F) - 0.00003 * @sin(Mp + M + 2 * F) + 0.00003 * @sin(Mp - M + 2 * F) - 0.00002 * @sin(Mp - M - 2 * F) - 0.00002 * @sin(3 * Mp + M) + 0.00002 * @sin(4 * Mp);
     } else if (kDif == 0.5) {
         JDE += -0.40614 * @sin(Mp) + 0.17302 * E * @sin(M) + 0.01614 * @sin(2 * Mp) + 0.01043 * @sin(2 * F) + 0.00734 * E * @sin(Mp - M) - 0.00515 * E * @sin(Mp + M) + 0.00209 * E * E * @sin(2 * M) - 0.00111 * @sin(Mp - 2 * F) - 0.00057 * @sin(Mp + 2 * F) + 0.00056 * E * @sin(2 * Mp + M) - 0.00042 * @sin(3 * Mp) + 0.00042 * E * @sin(M + 2 * F) + 0.00038 * E * @sin(M - 2 * F) - 0.00024 * E * @sin(2 * Mp - M) - 0.00017 * @sin(Omega) - 0.00007 * @sin(Mp + 2 * M) + 0.00004 * @sin(2 * Mp - 2 * F) + 0.00004 * @sin(3 * M) + 0.00003 * @sin(Mp + M - 2 * F) + 0.00003 * @sin(2 * Mp + 2 * F) - 0.00003 * @sin(Mp + M + 2 * F) + 0.00003 * @sin(Mp - M + 2 * F) - 0.00002 * @sin(Mp - M - 2 * F) - 0.00002 * @sin(3 * Mp + M) + 0.00002 * @sin(4 * Mp);
-    } else return error.NotImplemented;
+    } else return error.NotImplemented; // TODO
 
     JDE += (325 * @sin(A1) + 165 * @sin(A2) + 164 * @sin(A3) + 126 * @sin(A4) + 110 * @sin(A5) + 62 * @sin(A6) + 60 * @sin(A7) + 56 * @sin(A8) + 47 * @sin(A9) + 42 * @sin(A10) + 40 * @sin(A11) + 37 * @sin(A12) + 35 * @sin(A13) + 23 * @sin(A14)) / 1000000;
     return JDE;
@@ -62,28 +62,27 @@ pub fn getDateForSunPhase(year: i32, phase: u8) !f64 {
     return JD;
 }
 // 0 - New, 1 - First quarter, 2 - Full, 3 - Last quarter
-pub fn getClosestMoonPhase(date: dates.date, isForward: bool, phase: u8) !(struct {
+pub fn getClosestMoonPhase(JD: f64, isForward: bool, phase: u8) !(struct {
     JD: f64,
     k: f32,
 }) {
-    if (date.calendar != .Gregorian) return error.WrongCalendar;
     const fracPhase = @as(f32, @floatFromInt(phase)) / 4;
 
+    const date = dates.JDToGregorian(JD);
     var k = @as(f32, @floatFromInt(date.year - 2000)) * 12.3685 + @as(f32, @floatFromInt(date.month));
     k = math.round(k);
     k += fracPhase;
 
     const moons = [5]f64{ try getDateForMoonPhase(k), try getDateForMoonPhase(k - 1), try getDateForMoonPhase(k + 1), try getDateForMoonPhase(k - 2), try getDateForMoonPhase(k + 2) };
 
-    var moon: f64 = undefined;
+    var moon: f64 = -1;
     var finalI: usize = undefined;
-    const dateJD = try dates.gregorianToJD(date);
     for (moons, 0..) |element, i| {
         // moon = moons.Where(element => isForward ? (element >= dateTime) : (element <= dateTime)).OrderBy(element => Math.Max((element - dateTime).TotalDays, (dateTime - element).TotalDays)).First();
         //isForward ? (element >= dateTime) : (element <= dateTime)
-        const doesElementFit = if (isForward) (element >= dateJD) else (element <= dateJD);
+        const doesElementFit = if (isForward) (element >= JD) else (element <= JD);
         if (doesElementFit) {
-            const isElementCloserThanPrev = if (moon == undefined) true else (@abs(dateJD - moon) - @abs(dateJD - element) > 0);
+            const isElementCloserThanPrev = if (moon == -1) true else (@abs(JD - moon) - @abs(JD - element) > 0);
             if (isElementCloserThanPrev) {
                 moon = element;
                 finalI = i;
@@ -99,19 +98,19 @@ pub fn getClosestMoonPhase(date: dates.date, isForward: bool, phase: u8) !(struc
     };
     return .{ .JD = moon, .k = finalK };
 }
-pub fn getClosestSunPhase(date: dates.date, isForward: bool, phase: u8) !(struct {
+pub fn getClosestSunPhase(JD: f64, isForward: bool, phase: u8) !(struct {
     JD: f64,
     year: i32,
 }) {
+    const date = dates.JDToGregorian(JD);
     const suns = [3]f64{ try getDateForSunPhase(date.year, phase), try getDateForSunPhase(date.year - 1, phase), try getDateForSunPhase(date.year + 1, phase) };
 
-    var sun: f64 = undefined;
+    var sun: f64 = -1;
     var finalI: usize = undefined;
-    const dateJD = try dates.gregorianToJD(date);
     for (suns, 0..) |element, i| {
-        const doesElementFit = if (isForward) (element >= dateJD) else (element <= dateJD);
+        const doesElementFit = if (isForward) (element >= JD) else (element <= JD);
         if (doesElementFit) {
-            const isElementCloserThanPrev = if (sun == undefined) true else (@abs(dateJD - sun) - @abs(dateJD - element) > 0);
+            const isElementCloserThanPrev = if (sun == -1) true else (@abs(JD - sun) - @abs(JD - element) > 0);
             if (isElementCloserThanPrev) {
                 sun = element;
                 finalI = i;
@@ -158,10 +157,10 @@ pub fn getApparentSiderealTimeAtGreenwich(JD: f64) f64 {
     const theta0 = (JD1 - JD) * 1.00273790935 + Theta0;
 
     const nutation = getNutationValues(JD1); // ''
-    std.debug.print("nutation: {d}\n", .{nutation});
-    std.debug.print("Theta0: {s}\n", .{dates.JDToGregorian(JD1 + (Theta0 / (24 * 60 * 60)))});
+    // std.debug.print("nutation: {d}\n", .{nutation});
+    // std.debug.print("Theta0: {s}\n", .{dates.JDToGregorian(JD1 + (Theta0 / (24 * 60 * 60)))});
     const theta = theta0 + (nutation[0] * @cos(nutation[1] * 60 * 60 * math.pi / 180)) / 15;
-    std.debug.print("theta: {s}\n", .{dates.JDToGregorian(JD1 + (theta / (24 * 60 * 60)))});
+    // std.debug.print("theta: {s}\n", .{dates.JDToGregorian(JD1 + (theta / (24 * 60 * 60)))});
     return theta;
 }
 // apparent (ascension, declination), both in °
@@ -186,7 +185,7 @@ pub fn getPositionOfTheSun(JD: f64) [2]f64 {
     return [2]f64{ alpha, delta };
 }
 // In d (day)
-pub fn getTimeOfSunTransitRiseSet(JD: f64, utcOffset: f64, getTransit: bool, getRise: bool, getSet: bool) [3]f64 {
+pub fn getTimeOfSunTransitRiseSet(JD: f64, utcOffset: f64, getTransit: bool, getRise: bool, getSet: bool) [3]f64 { // TODO: Make this work
     // Chapter 15, pdf page 109
 
     const JD05 = math.floor(JD) + 0.5;
@@ -201,14 +200,14 @@ pub fn getTimeOfSunTransitRiseSet(JD: f64, utcOffset: f64, getTransit: bool, get
     const p1 = getPositionOfTheSun(JD05 - 1);
     const p2 = getPositionOfTheSun(JD05);
     const p3 = getPositionOfTheSun(JD05 + 1);
-    std.debug.print("JD05: {d}\n", .{JD05}); // right
-    std.debug.print("ΔT: {d}\n", .{DeltaT}); // assumed
+    // std.debug.print("JD05: {d}\n", .{JD05}); // right
+    // std.debug.print("ΔT: {d}\n", .{DeltaT}); // assumed
 
-    std.debug.print("Apparent sidereal time at greenwich: {d}\n", .{Theta0 / 15}); // close, but the difference due to nutation is tiny, so might not be visible and the difference seems higher where nutation values are more wrong
+    // std.debug.print("Apparent sidereal time at greenwich: {d}\n", .{Theta0 / 15}); // close, but the difference due to nutation is tiny, so might not be visible and the difference seems higher where nutation values are more wrong
 
-    std.debug.print("p1: {d}\n", .{p1});
-    std.debug.print("p2: {d}\n", .{p2}); // close
-    std.debug.print("p3: {d}\n", .{p3});
+    // std.debug.print("p1: {d}\n", .{p1});
+    // std.debug.print("p2: {d}\n", .{p2}); // close
+    // std.debug.print("p3: {d}\n", .{p3});
 
     const h0 = -0.8333;
 
@@ -266,16 +265,38 @@ pub fn getTimeOfSunTransitRiseSet(JD: f64, utcOffset: f64, getTransit: bool, get
 
     return [3]f64{ m0 + fractionalUtcOffset, m1 + fractionalUtcOffset, m2 + fractionalUtcOffset };
 }
-pub fn getDynamicTimeDifference(JD: f64) f64 {
+pub fn getDynamicTimeDifference(JD: f64) f64 { // TODO: Find an actual formula
     _ = JD;
-    return 69;
+    return 80;
 }
 
 pub fn main() !void {
-    const date = dates.date.init(1992, 10, 13, .Gregorian);
-    const jd = try dates.gregorianToJD(date);
-    const times = getTimeOfSunTransitRiseSet(jd, 0, true, true, true);
-    std.debug.print("{d}\n", .{dates.JDToGregorian(jd + times[0])});
-    std.debug.print("{d}\n", .{dates.JDToGregorian(jd + times[1])});
-    std.debug.print("{d}\n", .{dates.JDToGregorian(jd + times[2])});
+    //const date = dates.date.init(1992, 10, 13, .Gregorian);
+    //const date = dates.Date.init(2025, 1, 12, .Gregorian);
+    //const jd = try dates.gregorianToJD(date);
+
+    // const times = getTimeOfSunTransitRiseSet(jd, 0, true, true, true);
+    // std.debug.print("{d}\n", .{dates.JDToGregorian(jd + times[0])});
+    // std.debug.print("{d}\n", .{dates.JDToGregorian(jd + times[1])});
+    // std.debug.print("{d}\n", .{dates.JDToGregorian(jd + times[2])});
+
+    try settings.initApp();
+    defer settings.deinitApp();
+    // try @import("lang.zig").downloadTranslationPack("");
+    const JD = try dates.gregorianToJD(dates.Date.init(2024, 7, 5, .Gregorian));
+    const events = @import("events.zig");
+    // const now = dates.now();
+    // try events.presaveComplexEvents(now - settings.presaveComplexEventsForDays, now + settings.presaveComplexEventsForDays);
+    const evfd = try events.getEventsForDate(settings.allocator, JD);
+    std.debug.print("evfd: {s}", .{evfd});
+    settings.allocator.free(evfd);
+    // try events.addEvent(true, 10, 2462901.5, "testMoon2", .Gregorian, .Gregorian, "next/moon:2", "I LOVE MOONS2", "blue", "white");
+    // try events.addEvent(true, 10, 10000, "categoria", .Attic, .Attic, "", "A complex; title", "red", "yellow");
+
+    // const JD = try dates.gregorianToJD(dates.Date.init(2024, 7, 5, .Gregorian));
+    // var dateAttic = try dates.JDToDate(.Attic, JD, false, false);
+    // dateAttic.day += 0.5;
+    // std.debug.print("mainJD: {d}\n", .{JD});
+    // std.debug.print("dateAttic: {dt:1}\n", .{dateAttic});
+    // std.debug.print("dateGreg: {dt}\n", .{dates.JDToGregorian(try dates.dateToJD(dateAttic, false, false))});
 }

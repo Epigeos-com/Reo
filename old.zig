@@ -27,24 +27,3 @@ pub fn countTotalDays(self: date) !date {
         return newSelf;
     }
 }
-pub fn isGregorianYearLeap(year: i32) bool {
-    return if (year > 1582) (@mod(year, 4) == 0 and (@mod(year, 100) != 0 or @mod(year, 400) == 0)) else (@mod(year, 4) == 0);
-}
-pub fn daysInGregorianMonth(month: u8, isLeap: bool) !f64 {
-    return switch (month) {
-        1 => 31,
-        2 => if (isLeap) 29 else 28,
-        3 => 31,
-        4 => 30,
-        5 => 31,
-        6 => 30,
-        7 => 31,
-        8 => 31,
-        9 => 30,
-        10 => 31,
-        11 => 30,
-        12 => 31,
-        else => return error.InvalidMonth,
-    };
-}
-// Basic operations for the gregorian calendar are here, because they are needed for various functions, they themselves are not a part of the calendar system
