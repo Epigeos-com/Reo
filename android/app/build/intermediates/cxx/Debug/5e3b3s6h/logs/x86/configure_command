@@ -1,0 +1,18 @@
+/home/kirki/Android/Sdk/cmake/3.22.1/bin/cmake \
+  -H/home/kirki/Code/zig-sdl3 \
+  -DCMAKE_SYSTEM_NAME=Android \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+  -DCMAKE_SYSTEM_VERSION=21 \
+  -DANDROID_PLATFORM=android-21 \
+  -DANDROID_ABI=x86 \
+  -DCMAKE_ANDROID_ARCH_ABI=x86 \
+  -DANDROID_NDK=/home/kirki/Android/Sdk/ndk/27.0.12077973 \
+  -DCMAKE_ANDROID_NDK=/home/kirki/Android/Sdk/ndk/27.0.12077973 \
+  -DCMAKE_TOOLCHAIN_FILE=/home/kirki/Android/Sdk/ndk/27.0.12077973/build/cmake/android.toolchain.cmake \
+  -DCMAKE_MAKE_PROGRAM=/home/kirki/Android/Sdk/cmake/3.22.1/bin/ninja \
+  -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/home/kirki/Code/zig-sdl3/SDL_helloworld/app/build/intermediates/cxx/Debug/5e3b3s6h/obj/x86 \
+  -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/home/kirki/Code/zig-sdl3/SDL_helloworld/app/build/intermediates/cxx/Debug/5e3b3s6h/obj/x86 \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_FIND_ROOT_PATH=/home/kirki/Code/zig-sdl3/SDL_helloworld/app/.cxx/Debug/5e3b3s6h/prefab/x86/prefab \
+  -B/home/kirki/Code/zig-sdl3/SDL_helloworld/app/.cxx/Debug/5e3b3s6h/x86 \
+  -GNinja

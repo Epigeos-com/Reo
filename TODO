@@ -1,5 +1,9 @@
 // For 1.0:
 Make time of day and properdate work
+fix the leaks from presaveComplexEvents()
+
+Add app version checks
+Add translations
 
 Presave astronomy events
 Add solstice events

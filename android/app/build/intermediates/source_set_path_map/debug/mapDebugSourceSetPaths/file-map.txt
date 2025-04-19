@@ -1,0 +1,7 @@
+com.epigeos.reo.app-pngs-0 /home/kirki/Code/Calendars/Reo/android/app/build/generated/res/pngs/debug
+com.epigeos.reo.app-resValues-1 /home/kirki/Code/Calendars/Reo/android/app/build/generated/res/resValues/debug
+com.epigeos.reo.app-packageDebugResources-2 /home/kirki/Code/Calendars/Reo/android/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.epigeos.reo.app-packageDebugResources-3 /home/kirki/Code/Calendars/Reo/android/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.epigeos.reo.app-debug-4 /home/kirki/Code/Calendars/Reo/android/app/build/intermediates/merged_res/debug/mergeDebugResources
+com.epigeos.reo.app-debug-5 /home/kirki/Code/Calendars/Reo/android/app/src/debug/res
+com.epigeos.reo.app-main-6 /home/kirki/Code/Calendars/Reo/android/app/src/main/res

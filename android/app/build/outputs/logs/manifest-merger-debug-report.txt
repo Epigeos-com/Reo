@@ -1,0 +1,116 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:2:1-59:12
+INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:2:1-59:12
+INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:2:1-59:12
+INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:2:1-59:12
+MERGED from [SDL3.aar] /home/kirki/.gradle/caches/8.12/transforms/a7d058c3b8f7d59fa4ef6b8c0a8852ad/transformed/SDL3/AndroidManifest.xml:1:1-7:12
+	package
+		INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml
+	android:versionName
+		INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml
+	xmlns:tools
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:3:5-51
+	android:versionCode
+		INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:2:11-69
+uses-feature#0x00020000
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:6:5-54
+	android:glEsVersion
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:6:19-51
+uses-feature#android.hardware.touchscreen
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:9:5-11:36
+	android:required
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:11:9-33
+	android:name
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:10:9-52
+uses-feature#android.hardware.bluetooth
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:14:5-16:36
+	android:required
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:16:9-33
+	android:name
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:15:9-50
+uses-feature#android.hardware.gamepad
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:17:5-19:36
+	android:required
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:19:9-33
+	android:name
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:18:9-48
+uses-feature#android.hardware.usb.host
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:20:5-22:36
+	android:required
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:22:9-33
+	android:name
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:21:9-49
+uses-feature#android.hardware.type.pc
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:25:5-27:36
+	android:required
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:27:9-33
+	android:name
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:26:9-48
+uses-permission#android.permission.VIBRATE
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:30:5-66
+	android:name
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:30:22-63
+application
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:32:5-57:19
+INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:32:5-57:19
+	android:extractNativeLibs
+		INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml
+	android:supportsRtl
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:40:9-35
+	android:label
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:37:9-28
+	android:hardwareAccelerated
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:41:9-43
+	android:fullBackupContent
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:36:9-54
+	android:roundIcon
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:39:9-54
+	tools:targetApi
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:42:9-29
+	android:icon
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:38:9-43
+	android:allowBackup
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:34:9-35
+	android:theme
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:33:9-67
+	android:dataExtractionRules
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:35:9-65
+activity#com.epigeos.reo.MainActivity
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:43:9-56:20
+	android:exported
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:45:13-36
+	android:configChanges
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:46:13-156
+	android:preferMinimalPostProcessing
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:47:13-55
+	android:name
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:44:13-56
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:48:13-52:29
+action#android.intent.action.MAIN
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:49:17-69
+	android:name
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:49:25-66
+category#android.intent.category.LAUNCHER
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:51:17-77
+	android:name
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:51:27-74
+intent-filter#action:name:android.hardware.usb.action.USB_DEVICE_ATTACHED
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:53:13-55:29
+action#android.hardware.usb.action.USB_DEVICE_ATTACHED
+ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:54:17-90
+	android:name
+		ADDED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml:54:25-87
+uses-sdk
+INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml
+INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml
+MERGED from [SDL3.aar] /home/kirki/.gradle/caches/8.12/transforms/a7d058c3b8f7d59fa4ef6b8c0a8852ad/transformed/SDL3/AndroidManifest.xml:5:5-6:47
+MERGED from [SDL3.aar] /home/kirki/.gradle/caches/8.12/transforms/a7d058c3b8f7d59fa4ef6b8c0a8852ad/transformed/SDL3/AndroidManifest.xml:5:5-6:47
+	android:targetSdkVersion
+		INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /home/kirki/Code/Calendars/Reo/android/app/src/main/AndroidManifest.xml
