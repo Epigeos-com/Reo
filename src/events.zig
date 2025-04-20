@@ -59,7 +59,7 @@ pub fn removeEvent(is_complex: bool, ev: []const u8) !void {
     }
 }
 
-// Viable i.e. by time range, comment and category, needs to be manually freed
+// Needs to be manually freed // Viable i.e. by time range, comment and category
 pub fn getViableEventsForDates(allocator: std.mem.Allocator, jd_start: f64, jd_end: f64, file_name: []const u8) ![][]const u8 {
     const file = try manager.env_dir.openFile(file_name, .{});
     defer file.close();
@@ -75,6 +75,7 @@ pub fn getViableEventsForDates(allocator: std.mem.Allocator, jd_start: f64, jd_e
 
     return try viable_events.toOwnedSlice();
 }
+// Validate i.e. by time range, comment and category
 fn validateEvent(ev: []const u8, jd_start: f64, jd_end: f64) bool {
     if (std.mem.startsWith(u8, ev, "//")) return false;
 
@@ -118,13 +119,18 @@ pub const DayEventStruct = struct { jd: f64, ev: []const u8 };
 pub fn getEventsForDates(allocator: std.mem.Allocator, jd_start: f64, jd_end: f64) ![]DayEventStruct {
     const simple_events = try getViableEventsForDates(manager.allocator, jd_start, jd_end, "events.data");
     const complex_events = try getViableEventsForDates(manager.allocator, jd_start, jd_end, "complexEvents.simplified.data");
-    const events = try std.mem.concat(manager.allocator, []const u8, &[2][][]const u8{ simple_events, complex_events });
-    manager.allocator.free(simple_events);
-    manager.allocator.free(complex_events);
-    defer manager.allocator.free(events);
+    defer manager.allocator.free(simple_events);
+    defer manager.allocator.free(complex_events);
 
     var relevant_events = std.ArrayList(DayEventStruct).init(allocator);
-    for (events) |ev| {
+    for (complex_events) |ev| {
+        var arguments = std.mem.splitSequence(u8, ev, ";");
+        const arg0 = arguments.next().?;
+
+        const jd = try std.fmt.parseFloat(f64, arg0);
+        if (jd >= jd_start and jd <= jd_end) try relevant_events.append(.{ .jd = jd, .ev = ev }); // TODO: this is temp
+    }
+    for (simple_events) |ev| {
         var arguments = std.mem.splitSequence(u8, ev, ";");
         const arg0 = arguments.next().?;
         const arg1 = arguments.next().?;
@@ -138,7 +144,7 @@ pub fn getEventsForDates(allocator: std.mem.Allocator, jd_start: f64, jd_end: f6
         const first_jd = @max(jd_start, event_jd_start);
         const last_jd = @min(jd_end + 0.99999, event_jd_end); // TODO: Is there no better way to do this than  + 0.99999?
         if (arg5.len == 0) { // Non-repeating
-            var jd = @max(jd_start, event_jd_start);
+            var jd = first_jd;
             while (jd <= last_jd) {
                 try relevant_events.append(.{ .jd = jd, .ev = ev });
                 jd += 1;
@@ -284,7 +290,7 @@ pub fn presaveComplexEvents(jd_start: f64, jd_end: f64) !void {
     try manager.env_dir.writeFile(.{ .sub_path = "complexEvents.simplified.data", .data = simplified_events.items });
 }
 // Must be freed manually
-pub fn evaluateComplexExpression(allocator: std.mem.Allocator, expression: []const u8, calendar: dates.CalendarType, jd_start: f64, jd_end: f64) ![]const f64 {
+fn evaluateComplexExpression(allocator: std.mem.Allocator, expression: []const u8, calendar: dates.CalendarType, jd_start: f64, jd_end: f64) ![]const f64 {
     var fitting_dates = std.ArrayList(f64).init(allocator);
     defer fitting_dates.deinit();
     var i: f64 = jd_start;

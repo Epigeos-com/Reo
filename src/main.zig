@@ -5,7 +5,11 @@ export fn SDL_main() void {
     sdl.main();
 }
 pub fn main() !void {
-    // const dates = @import("dates.zig");
+    const dates = @import("dates.zig");
+    const astronomy = @import("astronomy.zig");
+    // const manager = @import("manager.zig");
+    // const events = @import("events.zig");
+    // const settings = @import("settings.zig");
     // const proper_date = true;
     // std.debug.print("aaaaaaaa: {dt}\n", .{try dates.jdToDate(.Attic, 2460764.5, proper_date, false)});
     // std.debug.print("aaaaaaaa: {dt}\n", .{try dates.jdToDate(.Attic, 2460734.5, proper_date, false)});
@@ -18,7 +22,17 @@ pub fn main() !void {
     // std.debug.print("aaaaaaaa: {dt}\n", .{try dates.jdToDate(.Attic, 2460855.5, proper_date, false)});
     // std.debug.print("aaaaaaaa: {dt}\n", .{try dates.jdToDate(.Attic, 2460856.5, proper_date, false)});
 
-    sdl.main();
+    // const now = dates.now();
+    // manager.env_path = try std.fs.getAppDataDir(manager.allocator, "Epigeos/hydor/Reo");
+    // manager.env_dir = try std.fs.cwd().makeOpenPath(manager.env_path, .{});
+    // try events.presaveComplexEvents(now - settings.presave_complex_events_for_days, now + settings.presave_complex_events_for_days);
+    // sdl.main();
+    const jd = try dates.dateToJD(dates.Date.init(2025, 4, 19, .Gregorian), false, false);
+    const a = astronomy.getTimeOfSunTransitRiseSet(jd, true, true, true);
+    std.debug.print("a: {d}\n", .{a[1] * 24});
+    std.debug.print("a: {d}\n", .{a[0] * 24});
+    std.debug.print("a: {d}\n", .{a[2] * 24});
+    std.debug.print("bbb: {d}\n", .{astronomy.getDynamicTimeDifference(jd)});
 
     // var shortest_year: f64 = 1000;
     // var year: i32 = 1900 + 779;

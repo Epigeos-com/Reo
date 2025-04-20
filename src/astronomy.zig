@@ -195,47 +195,43 @@ pub fn getTimeOfSunTransitRiseSet(jd: f64, get_transit: bool, get_rise: bool, ge
     // Chapter 15, pdf page 109
 
     const jd05 = math.floor(jd - 0.5) + 0.5;
-    const utc_offset = 0 / 24;
 
-    const L = -settings.longitude;
     const phi = settings.latitude * math.pi / 180;
-
-    const DeltaT = getDynamicTimeDifference(jd05);
-    const Theta0 = getApparentSiderealTimeAtGreenwich(jd05) * 15 / (60 * 60);
-
-    const p1 = getPositionOfTheSun(jd05 - 1);
-    const p2 = getPositionOfTheSun(jd05);
-    const p3 = getPositionOfTheSun(jd05 + 1);
-    // std.debug.print("jd05: {d}\n", .{jd05}); // right
-    // std.debug.print("ΔT: {d}\n", .{DeltaT}); // assumed
-
-    // std.debug.print("Apparent sidereal time at greenwich: {d}\n", .{Theta0 / 15}); // close, but the difference due to nutation is tiny, so might not be visible and the difference seems higher where nutation values are more wrong
-
-    // std.debug.print("p1: {d}\n", .{p1});
-    // std.debug.print("p2: {d}\n", .{p2}); // close
-    // std.debug.print("p3: {d}\n", .{p3});
+    const L = -settings.longitude;
 
     const h0 = -0.8333;
+    const Theta0 = getApparentSiderealTimeAtGreenwich(jd05) * 15 / (60 * 60);
+
+    var DeltaT: f64 = undefined;
+    var p1: [2]f64 = undefined;
+    const p2 = getPositionOfTheSun(jd05);
+    var p3: [2]f64 = undefined;
+    if (!settings.use_low_precision_for_sun_transit) {
+        p1 = getPositionOfTheSun(jd05 - 1);
+        p3 = getPositionOfTheSun(jd05 + 1);
+        DeltaT = getDynamicTimeDifference(jd05);
+    }
 
     const A = (@sin(h0 * math.pi / @as(comptime_float, 180)) - @sin(phi) * @sin(p2[1] * math.pi / 180)) / (@cos(phi) * @cos(p2[1] * math.pi / 180));
-    if (A < -1 or A > 1) return [3]f64{ undefined, undefined, undefined }; // Always above horizon
-    const H0 = math.acos(A) * 180 / math.pi;
+    if (A < -1 or A > 1) return [_]f64{ undefined, undefined, undefined }; // Always above/below horizon
+    std.debug.print("A: {d}\n", .{A});
+    const H0 = math.acos(A) * 180 / math.pi; // deg
+    std.debug.print("H0: {d}\n", .{H0});
 
-    const m = (p2[0] + L - Theta0) / 360;
-    var m0: f64 = 0;
+    var m = (p2[0] + L - Theta0) / 360;
     var m1: f64 = 0;
     var m2: f64 = 0;
     if (get_transit) {
-        m0 = @rem(m, 1);
-        if (m0 < 0) m0 += 1;
+        m = @rem(m, 1);
+        if (m < 0) m += 1;
 
         if (!settings.use_low_precision_for_sun_transit) {
-            const theta00 = Theta0 + 360.985647 * m0;
-            const n = m0 + DeltaT / 86400;
+            const theta00 = Theta0 + 360.985647 * m;
+            const n = m + DeltaT / 86400;
             const alpha = p2[0] + n / 2 * ((p2[0] - p1[0]) + (p3[0] - p2[0]) + n * (p1[0] - 2 * p2[0] + p3[0]));
             const H = @rem((theta00 - L - alpha), 180);
             const Deltam = -H / 360;
-            m0 += Deltam;
+            m += Deltam;
         }
     }
     if (get_rise) {
@@ -269,9 +265,37 @@ pub fn getTimeOfSunTransitRiseSet(jd: f64, get_transit: bool, get_rise: bool, ge
         }
     }
 
-    return [3]f64{ m0 + utc_offset, m1 + utc_offset, m2 + utc_offset };
+    return [3]f64{ m, m1, m2 };
 }
+// In s (time sec)
 pub fn getDynamicTimeDifference(jd: f64) f64 {
-    _ = jd;
-    return 80; // TODO
+    // https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
+
+    const gregorian_date = dates.jdToGregorian(jd);
+    const y = @as(f32, @floatFromInt(gregorian_date.year)) + (@as(f32, @floatFromInt(gregorian_date.month)) - 0.5) / 12;
+
+    if (y >= 1900 and y < 1920) {
+        const t = y - 1900;
+        return -2.79 + 1.494119 * t - 0.0598939 * t * t + 0.0061966 * t * t * t - 0.000197 * t * t * t * t;
+    } else if (y >= 1920 and y < 1941) {
+        const t = y - 1920;
+        return 21.20 + 0.84493 * t - 0.076100 * t * t + 0.0020936 * t * t * t;
+    } else if (y >= 1941 and y < 1961) {
+        const t = y - 1950;
+        return 29.07 + 0.407 * t - t * t / 233 + t * t * t / 2547;
+    } else if (y >= 1961 and y < 1986) {
+        const t = y - 1975;
+        return 45.45 + 1.067 * t - t * t / 260 - t * t * t / 718;
+    } else if (y >= 1986 and y < 2005) {
+        const t = y - 2000;
+        return 63.86 + 0.3345 * t - 0.060374 * t * t + 0.0017275 * t * t * t + 0.000651814 * t * t * t * t + 0.00002373599 * t * t * t * t * t;
+    } else if (y >= 2005 and y < 2050) {
+        const t = y - 2000;
+        return 62.92 + 0.32217 * t + 0.005589 * t * t;
+    } else if (y >= 2050 and y < 2150) {
+        return -20 + 32 * math.pow(f32, ((y - 1820) / 100), 2) - 0.5628 * (2150 - y);
+    }
+    return 100;
+    // _ = jd;
+    // return 69.1471;
 }

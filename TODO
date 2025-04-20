@@ -1,11 +1,11 @@
 // For 1.0:
 Make time of day and properdate work
-fix the leaks from presaveComplexEvents()
+fix leaks
 
 Add app version checks
 Add translations
 
-Presave astronomy events
+Repair complex  events
 Add solstice events
 
 Add empty boxes at beginning of month too / add days of the week
@@ -22,19 +22,14 @@ Update settings saving and loading for new parameters and order
 ?Cache for date info
 ?Add all events screen
 
-// To check
-Make sure complex events go right
-
-Fix today detection
+Add timezone support
 
 // For 1.1 (or later):
 Show season
 Add alternative numerals related to the calendars
 Add the date in different calendars to day view
-Add translations
 Add themes
 Add eclipse events
-Make automatic resizing better
 Add event descriptions
 Add theme switching based on events
 Add twlilights, star visibility, moon phase, etc. in day view

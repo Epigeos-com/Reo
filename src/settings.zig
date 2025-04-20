@@ -10,12 +10,14 @@ pub var anniversary_calendar: bool = true; // True - primary, false - secondary
 pub var use_low_precision_for_nutation_epsilon0: bool = false;
 pub var use_low_precision_for_sun_transit: bool = true;
 
-pub var longitude: f64 = 37.976234;
-pub var latitude: f64 = 23.721661;
+// pub var latitude: f64 = 37.976234;
+// pub var longitude: f64 = 23.721661;
+pub var latitude: f64 = 52.2311474659728;
+pub var longitude: f64 = 16.371881822322596;
 
 // Events
 pub var disabled_event_categories: []const []const u8 = &.{};
-pub var presave_complex_events_for_days: f64 = 30 * 12 * 2; // This many days from today backwards and forwards // These are referance dates from which the events will be ran, e.g. next/moon:0 ran from jd will result in a date later than jd, given that events can be arbitrarily complex, this can be arbitrarily later or earlier, therefore not all events in this range will actually show up and some may show up outside this range
+pub var presave_complex_events_for_days: f64 = 30 * 12 * 100; // This many days from today backwards and forwards // These are referance dates from which the events will be ran, e.g. next/moon:0 ran from jd will result in a date later than jd, given that events can be arbitrarily complex, this can be arbitrarily later or earlier, therefore not all events in this range will actually show up and some may show up outside this range
 
 // Gregorian
 pub var use_12_hour_format_in_gregorian = false;
@@ -32,7 +34,7 @@ pub var show_secondary_date_in_month_view = true;
 pub var show_secondary_date_in_day_view = true;
 pub var automatically_get_sun_position_in_day_view = false;
 
-pub fn saveSettings() !void {
+pub fn saveSettings() !void { // TODO: make sure these work
     const disabled_event_categories_string = try std.mem.join(manager.allocator, ";", disabled_event_categories);
     const settings_string = try std.fmt.allocPrint(manager.allocator, "{d}\n{d}\n{}\n{}\n{}\n{d}\n{d}\n{}\n{}\n{d}\n{}\n{s}\n{d}\n{s}\n{}\n{}\n{}\n{}", .{ @intFromEnum(primary_calendar), @intFromEnum(secondary_calendar), anniversary_calendar, use_low_precision_for_nutation_epsilon0, use_low_precision_for_sun_transit, longitude, latitude, use_12_hour_format_in_gregorian, use_month_day_format_in_gregorian, month_to_double_in_attic, romanise_month_names_in_attic, disabled_event_categories_string, presave_complex_events_for_days, target_lang, light_mode, show_secondary_date_in_month_view, show_secondary_date_in_day_view, automatically_get_sun_position_in_day_view });
     try manager.env_dir.writeFile(.{ .sub_path = "settings.data", .data = settings_string });
