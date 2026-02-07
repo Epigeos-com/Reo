@@ -18,10 +18,10 @@ pub const Date: type = struct {
         defer manager.allocator.free(str_lower);
         var split = std.mem.splitSequence(u8, str_lower, " ");
 
-        const split0 = split.next().?;
+        const split0 = split.next() orelse return error.ParseError;
         var day_string = std.mem.splitSequence(u8, split0, "/");
-        const day_string0 = day_string.next().?;
-        const day_string1 = day_string.next().?;
+        const day_string0 = day_string.next() orelse return error.ParseError;
+        const day_string1 = day_string.next() orelse return error.ParseError;
         var day = try std.fmt.parseFloat(f64, if (settings.use_month_day_format_in_gregorian) day_string1 else day_string0);
         const month = try std.fmt.parseInt(i8, if (settings.use_month_day_format_in_gregorian) day_string0 else day_string1, 10);
 
@@ -43,8 +43,8 @@ pub const Date: type = struct {
             hour_digits = split1;
             hour_letters = split2;
         }
-        var time = std.mem.splitSequence(u8, hour_digits, ";");
-        day += (try std.fmt.parseFloat(f64, time.next().?)) / 24 + (try std.fmt.parseFloat(f64, time.next() orelse "0")) / 1440 + (try std.fmt.parseFloat(f64, time.next() orelse "0")) / 86400;
+        var time = std.mem.splitSequence(u8, hour_digits, ":");
+        day += (try std.fmt.parseFloat(f64, time.next() orelse return error.ParseError)) / 24 + (try std.fmt.parseFloat(f64, time.next() orelse "0")) / 1440 + (try std.fmt.parseFloat(f64, time.next() orelse "0")) / 86400;
         var is_night = false;
         for ([5][]const u8{ "night", "nyx", "pm", "νύξ", "ΝΎΞ" }) |night| {
             if (std.mem.eql(u8, hour_letters, night)) {
@@ -61,7 +61,7 @@ pub const Date: type = struct {
             if (day_string.next()) |year_string| { // dayString[2]
                 if (year_string[0] == 'o') {
                     var olympiad_year_split = std.mem.splitSequence(u8, year_string[1..], "y");
-                    year = 4 * (try std.fmt.parseInt(i32, olympiad_year_split.next().?, 10)) + (try std.fmt.parseInt(i32, olympiad_year_split.next().?, 10)) - 1;
+                    year = 4 * (try std.fmt.parseInt(i32, olympiad_year_split.next() orelse return error.ParseError, 10)) + (try std.fmt.parseInt(i32, olympiad_year_split.next() orelse return error.ParseError, 10)) - 1;
                 } else {
                     year = try std.fmt.parseInt(i32, year_string, 10);
                 }
@@ -84,7 +84,7 @@ pub const Date: type = struct {
         const show_date = std.mem.containsAtLeast(u8, fmt, 1, "d");
         const show_month = std.mem.containsAtLeast(u8, fmt, 1, "m");
         const show_time = std.mem.containsAtLeast(u8, fmt, 1, "t");
-        const precision = options.width orelse 0;
+        const precision = options.precision orelse 0;
         const day_t = math.trunc(self.day);
 
         if (show_date or show_month) {
@@ -122,7 +122,11 @@ pub const Date: type = struct {
             }
 
             if (precision == 0) {
-                const minutes_r = math.round(minutes);
+                var minutes_r = math.round(minutes);
+                if (minutes_r == 60) { // If minutes is > 59.5
+                    hours_t += 1;
+                    minutes_r = 0;
+                }
                 try writer.print("{d:0>2}:{d:0>2}{s}", .{ hours_t, minutes_r, am_pm_string });
             } else if (precision == 1) {
                 const minutes_t = math.trunc(minutes);
@@ -191,10 +195,8 @@ pub fn getDateInfo(calendar: CalendarType, jd: f64, proper_date: bool, include_t
         row_size = 7;
         min_rows = 5;
     } else if (calendar == .Attic) {
-        if (proper_date) return getDateInfo(calendar, jd, false, false); // TODO
         var jd_var = jd;
         if (!proper_date and !include_time_of_day) jd_var = math.floor(jd - 0.5) + 0.5 + 0.5; // For it to not be a time before sunrise, i.e. the prev day
-        // if (date == RoundDateTime(date, CalendarType.Gregorian)) date = date.AddMilliseconds(1); // TODO
 
         const spb = try astronomy.getClosestSunPhase(jd_var, false, 1);
         var year: i32 = spb.year;
@@ -241,33 +243,26 @@ pub fn getDateInfo(calendar: CalendarType, jd: f64, proper_date: bool, include_t
 
         year += 779;
         const day_unrounded = jd_var - first_of_the_month_jd;
-        var day = math.ceil(day_unrounded);
+        var day = math.ceil(day_unrounded) + @as(f64, if (math.floor(jd_var - 0.5) == jd_var - 0.5) 1 else 0); // TODO: why is this needed
 
         if (proper_date or include_time_of_day) {
-            const day_fraction = day_unrounded - math.floor(day_unrounded);
-            const sunrise = astronomy.getTimeOfSunTransitRiseSet(jd_var, false, true, false)[1];
+            const sunrise = @round(astronomy.getTimeOfSunTransitRiseSet(jd_var, false, true, false)[1] * 1000000) / 1000000; // Idk why there's any error, but when getting events this caused issues over a few ms, so it's rounded now
+            const day_fraction = @round((day_unrounded - math.floor(day_unrounded)) * 1000000) / 1000000;
 
-            if (!include_time_of_day) {
-                if (day_fraction < sunrise) // Before sunrise
-                {
-                    day -= 1;
-                }
-            } else {
+            if (day_fraction < sunrise) day -= 1;
+            if (include_time_of_day) {
                 const sunset = astronomy.getTimeOfSunTransitRiseSet(jd_var, false, false, true)[2];
-                if (day_fraction < sunrise) // Before sunrise
-                {
+                if (day_fraction < sunrise) { // Before sunrise
                     const prev_day_sunset = astronomy.getTimeOfSunTransitRiseSet(jd_var - 1, false, false, true)[2];
-                    const segment_length = (sunrise - prev_day_sunset) / 12;
-                    const hour = (sunrise - day_fraction) / segment_length;
+                    const segment_length = (sunrise + 1 - prev_day_sunset) / 12;
+                    const hour = (day_fraction + 1 - prev_day_sunset) / segment_length + 12; // either both have +1 or neither // day_fraction = prev_day_sunset - 1 when hour = 12 // when hour = 24, day_fraction = sunrise
                     day += hour / 24;
-                } else if (day_fraction > sunset) // After sunset
-                {
+                } else if (day_fraction > sunset) { // After sunset
                     const next_day_sunrise = astronomy.getTimeOfSunTransitRiseSet(jd_var + 1, false, true, false)[1];
-                    const segment_length = (next_day_sunrise - sunset) / 12;
-                    const hour = (next_day_sunrise - day_fraction) / segment_length;
+                    const segment_length = (next_day_sunrise + 1 - sunset) / 12;
+                    const hour = (day_fraction - sunset) / segment_length + 12; // day_fraction = sunset when hour = 12 // when hour = 24, day_fraction = next_day_sunrise + 1
                     day += hour / 24;
-                } else // Mid day
-                {
+                } else { // Mid day
                     const segment_length = (sunset - sunrise) / 12;
                     const hour = (day_fraction - sunrise) / segment_length;
                     day += hour / 24;
@@ -275,14 +270,13 @@ pub fn getDateInfo(calendar: CalendarType, jd: f64, proper_date: bool, include_t
             }
 
             if (day < 1) {
-                var new_date_info = try getDateInfo(.Attic, jd_var - 0.5, proper_date, include_time_of_day);
-                new_date_info.main_date.day += 0.5;
-                // newDateInfo.mainDate = newDateInfo.mainDate.normaliseGregorian();
+                var new_date_info = try getDateInfo(.Attic, jd_var - 1, true, false); // TODO: This could cause issues if you're very close to the sunrise
+                new_date_info.main_date.day += 1;
+                if (include_time_of_day) new_date_info.main_date.day = math.floor(new_date_info.main_date.day) + day - math.floor(day);
                 return new_date_info;
-            } // TODO: Make sure this works
+            }
         }
 
-        // if (@abs(math.round(day) - day) < 0.001) day = math.round(day); // TODO
         output_date = Date.init(year, @intCast(month), day, .Attic);
 
         var first_of_the_next_month: f64 = 0;
@@ -303,20 +297,16 @@ pub fn getDateInfo(calendar: CalendarType, jd: f64, proper_date: bool, include_t
 // These are really weird, but they work, they don't round till the beginning of the day in the chosen calendar, just substract whenever the day starts and round according to gregorian rules, so you don't get the beginning of the day here, but you can use it to check whether two dates are in the same day as well as to assign a gregorian date to a date of another calendar
 pub fn ceilingDate(jd: f64, calendar: CalendarType) f64 {
     var jd_var = jd;
-    if (calendar == .Attic) {
-        jd_var -= astronomy.getTimeOfSunTransitRiseSet(jd, false, true, false)[1];
-    }
+    jd_var -= getDayBeginning(jd, calendar);
 
     jd_var -= 0.5;
-    jd_var = if (jd_var != math.floor(jd_var)) math.floor(jd_var) + 1 else math.floor(jd_var);
+    jd_var = math.ceil(jd_var);
     jd_var += 0.5;
     return jd_var;
 }
 pub fn floorDate(jd: f64, calendar: CalendarType) f64 {
     var jd_var = jd;
-    if (calendar == .Attic) {
-        jd_var -= astronomy.getTimeOfSunTransitRiseSet(jd, false, true, false)[1];
-    }
+    jd_var -= getDayBeginning(jd, calendar);
 
     jd_var -= 0.5;
     jd_var = math.floor(jd_var);
@@ -325,32 +315,37 @@ pub fn floorDate(jd: f64, calendar: CalendarType) f64 {
 }
 pub fn roundDate(jd: f64, calendar: CalendarType) f64 {
     var jd_var = jd;
-    if (calendar == .Attic) {
-        jd_var -= astronomy.getTimeOfSunTransitRiseSet(jd, false, true, false)[1];
-    }
+    jd_var -= getDayBeginning(jd, calendar);
 
     jd_var -= 0.5;
     jd_var = if (jd_var - math.floor(jd_var) >= 0.5) math.floor(jd_var) + 1 else math.floor(jd_var);
     jd_var += 0.5;
     return jd_var;
 }
+// in fractions of a day
+pub fn getDayBeginning(jd: f64, calendar: CalendarType) f64 {
+    if (calendar == .Attic) {
+        return astronomy.getTimeOfSunTransitRiseSet(jd, false, true, false)[1];
+    } else {
+        return 0;
+    }
+}
 
-// See getDateInfo() for notes, including proper_date meaning
+// See getDateInfo() for notes
 pub fn dateToJD(date: Date, proper_date: bool, include_time_of_day: bool) !f64 {
     if (date.calendar == .Attic) {
-        if (proper_date) return dateToJD(date, false, false); // TODO
-        var jd = 1721423.5 + (@as(f64, @floatFromInt(date.year)) - 779) * 365.2425 + (@as(f64, @floatFromInt(date.month)) - 6) * 30.44; // Guestimation
+        var jd = 1721423.5 + (@as(f64, @floatFromInt(date.year)) - 779) * 365.2425 + (@as(f64, @floatFromInt(date.month)) - 6) * 30.44; // Estimation
         var date_info = try getDateInfo(.Attic, jd, false, false);
 
         while (date_info.main_date.year != date.year) {
-            jd += if (date_info.main_date.year < date.year) 352 else -352;
+            jd += if (date_info.main_date.year < date.year) 352 else -352; // TODO: how could a year be this short? that's what I got running it from Gregorian 1900 to 2100, could be a sign of an issue
             date_info = try getDateInfo(.Attic, jd, false, false);
         }
         while (date_info.main_date.month != date.month) {
             jd += if (date_info.main_date.month < date.month) 28 else -28;
             date_info = try getDateInfo(.Attic, jd, false, false);
         }
-        jd += date.day - date_info.main_date.day;
+        jd += math.floor(date.day) - date_info.main_date.day;
         jd = floorDate(jd, .Gregorian);
 
         if (include_time_of_day or proper_date) {
@@ -361,29 +356,28 @@ pub fn dateToJD(date: Date, proper_date: bool, include_time_of_day: bool) !f64 {
                 const midnight_hour = (midnight_in_attic - math.floor(midnight_in_attic)) * 24;
                 const hour = (date.day - math.floor(date.day)) * 24; // In attic
 
-                jd += 1;
                 const sun_rise_set = astronomy.getTimeOfSunTransitRiseSet(jd, false, true, true);
 
-                if (hour >= 12 and hour >= midnight_hour) // Before sunrise
+                if (hour > 12 and hour >= midnight_hour) // Before sunrise
                 {
                     const prev_day_sunset = astronomy.getTimeOfSunTransitRiseSet(jd - 1, false, false, true)[2];
-                    const segment_length = (sun_rise_set[1] - prev_day_sunset) / 12; // length of attic hour in gregorian hours
-                    const day_fraction = (hour - midnight_hour) * @abs(segment_length); // fraction in gregorian
-                    jd += day_fraction;
-                } else if (hour >= 12 and hour < midnight_hour) // After sunset //gud
+                    const segment_length = (sun_rise_set[1] + 1 - prev_day_sunset) / 12; // length of attic hour in julian hours
+                    const day_fraction = (hour - 12) * segment_length + prev_day_sunset - 1; // fraction in julian
+                    jd += day_fraction + 1;
+                } else if (hour > 12 and hour < midnight_hour) // After sunset
                 {
                     const next_day_sunrise = astronomy.getTimeOfSunTransitRiseSet(jd + 1, false, true, false)[1];
-                    const segment_length = (next_day_sunrise - sun_rise_set[2]) / 12;
-                    const day_fraction = (hour - midnight_hour) * @abs(segment_length);
+                    const segment_length = (next_day_sunrise + 1 - sun_rise_set[2]) / 12;
+                    const day_fraction = (hour - 12) * segment_length + sun_rise_set[2];
                     jd += day_fraction;
-                } else // Mid day //gud
+                } else // Mid day
                 {
                     const segment_length = (sun_rise_set[2] - sun_rise_set[1]) / 12;
                     const day_fraction = hour * segment_length + sun_rise_set[1];
-                    jd += day_fraction - 1;
+                    jd += day_fraction;
                 }
             } else {
-                if (date.day > midnight_in_attic) jd += 1;
+                if (date.day >= midnight_in_attic) jd += 1;
             }
         }
         return jd;
@@ -391,7 +385,7 @@ pub fn dateToJD(date: Date, proper_date: bool, include_time_of_day: bool) !f64 {
         return try gregorianToJD(date);
     }
 }
-// See getDateInfo() for notes, including proper_date meaning
+// See getDateInfo() for notes
 pub fn jdToDate(calendar: CalendarType, jd: f64, proper_date: bool, include_time_of_day: bool) !Date {
     if (calendar == .Attic) {
         return (try getDateInfo(.Attic, jd, proper_date, include_time_of_day)).main_date;
@@ -407,7 +401,7 @@ pub fn jdToGregorian(jd: f64) Date {
     const Z = math.trunc(jd05);
     const F = jd05 - Z;
     var A = Z;
-    if (Z >= 2299161) { // or 2291161??
+    if (Z >= 2299161) {
         const alpha = math.trunc((Z - 1867216.25) / 36524.25);
         A = Z + 1 + alpha - math.trunc(alpha / 4);
     }
@@ -441,53 +435,37 @@ pub fn gregorianToJD(date: Date) !f64 {
         year -= 1;
         month += 12;
     }
-    const A = @divTrunc(year, 100);
+    const A = @divFloor(year, 100);
     var B: i32 = 0;
     if (year >= 1582) { // when Gregorian was created
         if (year > 1582 or month >= 10) {
             if (year > 1582 or month > 10 or day >= 15.5) {
-                B = 2 - A + @divTrunc(A, 4);
+                B = 2 - A + @divFloor(A, 4);
             }
         }
     }
-    return math.trunc(365.25 * @as(f64, @floatFromInt(year + 4716))) + math.trunc(30.6001 * @as(f64, @floatFromInt(month + 1))) + day + @as(f64, @floatFromInt(B)) - 1524.5;
+    return math.floor(365.25 * @as(f64, @floatFromInt(year + 4716))) + math.floor(30.6001 * @as(f64, @floatFromInt(month + 1))) + day + @as(f64, @floatFromInt(B)) - 1524.5;
 }
 
 pub fn isGregorianYearLeap(year: i32) bool {
     return if (year > 1582) (@rem(year, 4) == 0 and (@rem(year, 100) != 0 or @rem(year, 400) == 0)) else (@rem(year, 4) == 0);
 }
 pub fn getGregorianMonthDayCount(year: i32, month: i8) !u8 {
-    if (month == 2) {
-        return if (isGregorianYearLeap(year)) 29 else 28;
-    } else {
-        return switch (month) {
-            1 => 31,
-            3 => 31,
-            4 => 30,
-            5 => 31,
-            6 => 30,
-            7 => 31,
-            8 => 31,
-            9 => 30,
-            10 => 31,
-            11 => 30,
-            12 => 31,
-            else => return error.InvalidMonth,
-        };
-    }
-}
-pub fn normaliseGregorian(self: Date) void {
-    if (self.day < 0) { // Earlier month
-
-    } else {
-        var day_count = getGregorianMonthDayCount(self.year, self.month);
-        while (day_count > self.day) { // Later month
-            self.day -= day_count;
-            self.month += 1;
-            // self.normaliseMonth();
-            day_count = getGregorianMonthDayCount(self.year, self.month);
-        }
-    }
+    return switch (month) {
+        1 => 31,
+        2 => if (isGregorianYearLeap(year)) 29 else 28,
+        3 => 31,
+        4 => 30,
+        5 => 31,
+        6 => 30,
+        7 => 31,
+        8 => 31,
+        9 => 30,
+        10 => 31,
+        11 => 30,
+        12 => 31,
+        else => return error.InvalidMonth,
+    };
 }
 
 pub fn now() f64 {

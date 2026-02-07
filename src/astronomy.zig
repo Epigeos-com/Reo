@@ -9,7 +9,7 @@ pub fn getDateForMoonPhase(k: f32) !f64 {
 
     const k64: f64 = @floatCast(k);
     const T = k64 / 1236.85;
-    var jdE = 2451550.09766 + 29.530588861 * k64 + 0.00015437 * T * T - 0.00000015 * T * T * T + 0.00000000073 * T * T * T * T;
+    var jde = 2451550.09766 + 29.530588861 * k64 + 0.00015437 * T * T - 0.00000015 * T * T * T + 0.00000000073 * T * T * T * T;
 
     const E = 1 - 0.002516 * T - 0.0000074 * T * T;
     const M = (2.5534 + 29.10535670 * k64 - 0.0000014 * T * T - 0.00000011 * T * T * T) * math.pi / 180;
@@ -32,39 +32,39 @@ pub fn getDateForMoonPhase(k: f32) !f64 {
     const A13 = (239.56 + 25.513099 * k64) * math.pi / 180;
     const A14 = (331.55 + 3.592518 * k64) * math.pi / 180;
 
-    const kDif = k64 - math.floor(k64);
-    if (kDif == 0) {
-        jdE += -0.4072 * @sin(Mp) + 0.17241 * E * @sin(M) + 0.01608 * @sin(2 * Mp) + 0.01039 * @sin(2 * F) + 0.00739 * E * @sin(Mp - M) - 0.00514 * E * @sin(Mp + M) + 0.00208 * E * E * @sin(2 * M) - 0.00111 * @sin(Mp - 2 * F) - 0.00057 * @sin(Mp + 2 * F) + 0.00056 * E * @sin(2 * Mp + M) - 0.00042 * @sin(3 * Mp) + 0.00042 * E * @sin(M + 2 * F) + 0.00038 * E * @sin(M - 2 * F) - 0.00024 * E * @sin(2 * Mp - M) - 0.00017 * @sin(Omega) - 0.00007 * @sin(Mp + 2 * M) + 0.00004 * @sin(2 * Mp - 2 * F) + 0.00004 * @sin(3 * M) + 0.00003 * @sin(Mp + M - 2 * F) + 0.00003 * @sin(2 * Mp + 2 * F) - 0.00003 * @sin(Mp + M + 2 * F) + 0.00003 * @sin(Mp - M + 2 * F) - 0.00002 * @sin(Mp - M - 2 * F) - 0.00002 * @sin(3 * Mp + M) + 0.00002 * @sin(4 * Mp);
-    } else if (kDif == 0.5) {
-        jdE += -0.40614 * @sin(Mp) + 0.17302 * E * @sin(M) + 0.01614 * @sin(2 * Mp) + 0.01043 * @sin(2 * F) + 0.00734 * E * @sin(Mp - M) - 0.00515 * E * @sin(Mp + M) + 0.00209 * E * E * @sin(2 * M) - 0.00111 * @sin(Mp - 2 * F) - 0.00057 * @sin(Mp + 2 * F) + 0.00056 * E * @sin(2 * Mp + M) - 0.00042 * @sin(3 * Mp) + 0.00042 * E * @sin(M + 2 * F) + 0.00038 * E * @sin(M - 2 * F) - 0.00024 * E * @sin(2 * Mp - M) - 0.00017 * @sin(Omega) - 0.00007 * @sin(Mp + 2 * M) + 0.00004 * @sin(2 * Mp - 2 * F) + 0.00004 * @sin(3 * M) + 0.00003 * @sin(Mp + M - 2 * F) + 0.00003 * @sin(2 * Mp + 2 * F) - 0.00003 * @sin(Mp + M + 2 * F) + 0.00003 * @sin(Mp - M + 2 * F) - 0.00002 * @sin(Mp - M - 2 * F) - 0.00002 * @sin(3 * Mp + M) + 0.00002 * @sin(4 * Mp);
-    } else if (kDif == 0.25 or kDif == 0.75) {
-        jdE += -0.62801 * @sin(Mp) + 0.17172 * E * @sin(M) - 0.01183 * E * @sin(Mp + M) + 0.00862 * @sin(2 * Mp) + 0.00804 * @sin(2 * F) + 0.00454 * E * @sin(Mp - M) + 0.00204 * E * E * @sin(2 * M) - 0.0018 * @sin(Mp - 2 * F) - 0.0007 * @sin(Mp + 2 * F) - 0.0004 * @sin(3 * Mp) - 0.00034 * E * @sin(2 * Mp - M) + 0.00032 * E * @sin(M + 2 * F) + 0.00032 * E * @sin(M - 2 * F) - 0.00028 * E * E * @sin(Mp + 2 * M) + 0.00027 * E * @sin(2 * Mp + M) - 0.00017 * @sin(Omega) - 0.00005 * @sin(Mp - M - 2 * F) + 0.00004 * @sin(2 * Mp + 2 * F) - 0.00004 * @sin(Mp + M + 2 * F) + 0.00004 * @sin(Mp - 2 * M) + 0.00003 * @sin(Mp + M - 2 * F) + 0.00003 * @sin(3 * M) + 0.00002 * @sin(2 * Mp - 2 * F) + 0.00002 * @sin(Mp - M + 2 * F) - 0.00002 * @sin(3 * Mp + M);
+    const k_dif = k64 - math.floor(k64);
+    if (k_dif == 0) {
+        jde += -0.4072 * @sin(Mp) + 0.17241 * E * @sin(M) + 0.01608 * @sin(2 * Mp) + 0.01039 * @sin(2 * F) + 0.00739 * E * @sin(Mp - M) - 0.00514 * E * @sin(Mp + M) + 0.00208 * E * E * @sin(2 * M) - 0.00111 * @sin(Mp - 2 * F) - 0.00057 * @sin(Mp + 2 * F) + 0.00056 * E * @sin(2 * Mp + M) - 0.00042 * @sin(3 * Mp) + 0.00042 * E * @sin(M + 2 * F) + 0.00038 * E * @sin(M - 2 * F) - 0.00024 * E * @sin(2 * Mp - M) - 0.00017 * @sin(Omega) - 0.00007 * @sin(Mp + 2 * M) + 0.00004 * @sin(2 * Mp - 2 * F) + 0.00004 * @sin(3 * M) + 0.00003 * @sin(Mp + M - 2 * F) + 0.00003 * @sin(2 * Mp + 2 * F) - 0.00003 * @sin(Mp + M + 2 * F) + 0.00003 * @sin(Mp - M + 2 * F) - 0.00002 * @sin(Mp - M - 2 * F) - 0.00002 * @sin(3 * Mp + M) + 0.00002 * @sin(4 * Mp);
+    } else if (k_dif == 0.5) {
+        jde += -0.40614 * @sin(Mp) + 0.17302 * E * @sin(M) + 0.01614 * @sin(2 * Mp) + 0.01043 * @sin(2 * F) + 0.00734 * E * @sin(Mp - M) - 0.00515 * E * @sin(Mp + M) + 0.00209 * E * E * @sin(2 * M) - 0.00111 * @sin(Mp - 2 * F) - 0.00057 * @sin(Mp + 2 * F) + 0.00056 * E * @sin(2 * Mp + M) - 0.00042 * @sin(3 * Mp) + 0.00042 * E * @sin(M + 2 * F) + 0.00038 * E * @sin(M - 2 * F) - 0.00024 * E * @sin(2 * Mp - M) - 0.00017 * @sin(Omega) - 0.00007 * @sin(Mp + 2 * M) + 0.00004 * @sin(2 * Mp - 2 * F) + 0.00004 * @sin(3 * M) + 0.00003 * @sin(Mp + M - 2 * F) + 0.00003 * @sin(2 * Mp + 2 * F) - 0.00003 * @sin(Mp + M + 2 * F) + 0.00003 * @sin(Mp - M + 2 * F) - 0.00002 * @sin(Mp - M - 2 * F) - 0.00002 * @sin(3 * Mp + M) + 0.00002 * @sin(4 * Mp);
+    } else if (k_dif == 0.25 or k_dif == 0.75) {
+        jde += -0.62801 * @sin(Mp) + 0.17172 * E * @sin(M) - 0.01183 * E * @sin(Mp + M) + 0.00862 * @sin(2 * Mp) + 0.00804 * @sin(2 * F) + 0.00454 * E * @sin(Mp - M) + 0.00204 * E * E * @sin(2 * M) - 0.0018 * @sin(Mp - 2 * F) - 0.0007 * @sin(Mp + 2 * F) - 0.0004 * @sin(3 * Mp) - 0.00034 * E * @sin(2 * Mp - M) + 0.00032 * E * @sin(M + 2 * F) + 0.00032 * E * @sin(M - 2 * F) - 0.00028 * E * E * @sin(Mp + 2 * M) + 0.00027 * E * @sin(2 * Mp + M) - 0.00017 * @sin(Omega) - 0.00005 * @sin(Mp - M - 2 * F) + 0.00004 * @sin(2 * Mp + 2 * F) - 0.00004 * @sin(Mp + M + 2 * F) + 0.00004 * @sin(Mp - 2 * M) + 0.00003 * @sin(Mp + M - 2 * F) + 0.00003 * @sin(3 * M) + 0.00002 * @sin(2 * Mp - 2 * F) + 0.00002 * @sin(Mp - M + 2 * F) - 0.00002 * @sin(3 * Mp + M);
         const W = 0.00306 - 0.00038 * E * @cos(M) + 0.00026 * @cos(Mp) - 0.00002 * @cos(Mp - M) + 0.00002 * @cos(Mp + M) + 0.00002 * @cos(2 * F);
-        if (kDif == 0.25) jdE += W else jdE -= W;
+        if (k_dif == 0.25) jde += W else jde -= W;
     } else {
         return error.InvalidPhase;
     }
 
-    jdE += (325 * @sin(A1) + 165 * @sin(A2) + 164 * @sin(A3) + 126 * @sin(A4) + 110 * @sin(A5) + 62 * @sin(A6) + 60 * @sin(A7) + 56 * @sin(A8) + 47 * @sin(A9) + 42 * @sin(A10) + 40 * @sin(A11) + 37 * @sin(A12) + 35 * @sin(A13) + 23 * @sin(A14)) / 1000000;
-    return jdE;
+    jde += (325 * @sin(A1) + 165 * @sin(A2) + 164 * @sin(A3) + 126 * @sin(A4) + 110 * @sin(A5) + 62 * @sin(A6) + 60 * @sin(A7) + 56 * @sin(A8) + 47 * @sin(A9) + 42 * @sin(A10) + 40 * @sin(A11) + 37 * @sin(A12) + 35 * @sin(A13) + 23 * @sin(A14)) / 1000000;
+    return jde;
 }
 // This is solstices and equinoxes, phase is 0 for March equinox, 1 for June solstice, 2 for September equinox, 3 for December solstice
 pub fn getDateForSunPhase(year: i32, phase: u8) !f64 {
     // Chapter 27, pdf page 185
 
     const Y: f64 = (@as(f64, @floatFromInt(year)) - 2000) / 1000;
-    const jdE0: f64 = switch (phase) {
+    const jde0: f64 = switch (phase) {
         0 => 2451623.80984 + 365242.37404 * Y + 0.05169 * Y * Y - 0.00411 * Y * Y * Y - 0.00057 * Y * Y * Y * Y,
         1 => 2451716.56767 + 365241.62603 * Y + 0.00325 * Y * Y + 0.00888 * Y * Y * Y - 0.00030 * Y * Y * Y * Y,
         2 => 2451810.21715 + 365242.01767 * Y - 0.11575 * Y * Y + 0.00337 * Y * Y * Y + 0.00078 * Y * Y * Y * Y,
         3 => 2451900.05952 + 365242.74049 * Y - 0.06223 * Y * Y - 0.00823 * Y * Y * Y + 0.00032 * Y * Y * Y * Y,
         else => return error.InvalidPhase,
     };
-    const T = (jdE0 - 2451545) / 36525;
+    const T = (jde0 - 2451545) / 36525;
     const W = 35999.373 * T - 2.47;
     const Deltalambda = 1 + 0.0334 * @cos(W * math.pi / 180) + 0.0007 * @cos(W * math.pi / 90);
     const S = 485 * @cos((324.96 + 1934.136 * T) * math.pi / 180) + 45 * @cos((247.54 + 29929.562 * T) * math.pi / 180) + 203 * @cos((337.23 + 32964.467 * T) * math.pi / 180) + 44 * @cos((325.15 + 31555.956 * T) * math.pi / 180) + 199 * @cos((342.08 + 20.186 * T) * math.pi / 180) + 29 * @cos((60.93 + 4443.417 * T) * math.pi / 180) + 182 * @cos((27.85 + 445267.112 * T) * math.pi / 180) + 18 * @cos((155.12 + 67555.328 * T) * math.pi / 180) + 156 * @cos((73.14 + 45036.886 * T) * math.pi / 180) + 17 * @cos((288.79 + 4562.452 * T) * math.pi / 180) + 136 * @cos((171.52 + 22518.443 * T) * math.pi / 180) + 16 * @cos((198.04 + 62894.029 * T) * math.pi / 180) + 77 * @cos((222.54 + 65928.934 * T) * math.pi / 180) + 14 * @cos((199.76 + 31436.921 * T) * math.pi / 180) + 74 * @cos((296.72 + 3034.906 * T) * math.pi / 180) + 12 * @cos((95.39 + 14577.848 * T) * math.pi / 180) + 70 * @cos((243.58 + 9037.513 * T) * math.pi / 180) + 12 * @cos((287.11 + 31931.756 * T) * math.pi / 180) + 58 * @cos((119.81 + 33718.147 * T) * math.pi / 180) + 12 * @cos((320.81 + 34777.259 * T) * math.pi / 180) + 52 * @cos((297.17 + 150.678 * T) * math.pi / 180) + 9 * @cos((227.73 + 1222.114 * T) * math.pi / 180) + 50 * @cos((21.02 + 2281.226 * T) * math.pi / 180) + 8 * @cos((15.45 + 16859.074 * T) * math.pi / 180);
-    const jd = jdE0 + (0.00001 * S) / Deltalambda;
+    const jd = jde0 + (0.00001 * S) / Deltalambda;
     return jd;
 }
 // 0 - New, 1 - First quarter, 2 - Full, 3 - Last quarter
@@ -145,7 +145,7 @@ pub fn getNutationValues(jd: f64) [2]f64 {
     const Deltaepsilon = 9.2 * @cos(Omega) + 0.57 * @cos(2 * L) + 0.1 * @cos(2 * Lp) - 0.09 * @cos(2 * Omega);
 
     const U = T / 100;
-    const epsilon0 = if (settings.use_low_precision_for_nutation_epsilon0) 84381.448 - 46.8150 * T - 0.00059 * T * T + 0.001813 * T * T * T else 84381.448 - 4680.93 * U - 1.55 * U * U + 1999.25 * U * U * U - 51.38 * U * U * U * U - 249.67 * U * U * U * U * U - 39.05 * U * U * U * U * U * U + 7.12 * U * U * U * U * U * U * U + 27.87 * U * U * U * U * U * U * U * U + 5.79 * U * U * U * U * U * U * U * U * U + 2.45 * U * U * U * U * U * U * U * U * U * U;
+    const epsilon0 = 84381.448 - 4680.93 * U - 1.55 * U * U + 1999.25 * U * U * U - 51.38 * U * U * U * U - 249.67 * U * U * U * U * U - 39.05 * U * U * U * U * U * U + 7.12 * U * U * U * U * U * U * U + 27.87 * U * U * U * U * U * U * U * U + 5.79 * U * U * U * U * U * U * U * U * U + 2.45 * U * U * U * U * U * U * U * U * U * U;
 
     const epsilon = epsilon0 + Deltaepsilon;
 
@@ -191,7 +191,7 @@ pub fn getPositionOfTheSun(jd: f64) [2]f64 {
     return [2]f64{ alpha, delta };
 }
 // In d (day)
-pub fn getTimeOfSunTransitRiseSet(jd: f64, get_transit: bool, get_rise: bool, get_set: bool) [3]f64 { // TODO: Make this work
+pub fn getTimeOfSunTransitRiseSet(jd: f64, get_transit: bool, get_rise: bool, get_set: bool) [3]f64 {
     // Chapter 15, pdf page 109
 
     const jd05 = math.floor(jd - 0.5) + 0.5;
@@ -202,21 +202,11 @@ pub fn getTimeOfSunTransitRiseSet(jd: f64, get_transit: bool, get_rise: bool, ge
     const h0 = -0.8333;
     const Theta0 = getApparentSiderealTimeAtGreenwich(jd05) * 15 / (60 * 60);
 
-    var DeltaT: f64 = undefined;
-    var p1: [2]f64 = undefined;
     const p2 = getPositionOfTheSun(jd05);
-    var p3: [2]f64 = undefined;
-    if (!settings.use_low_precision_for_sun_transit) {
-        p1 = getPositionOfTheSun(jd05 - 1);
-        p3 = getPositionOfTheSun(jd05 + 1);
-        DeltaT = getDynamicTimeDifference(jd05);
-    }
 
     const A = (@sin(h0 * math.pi / @as(comptime_float, 180)) - @sin(phi) * @sin(p2[1] * math.pi / 180)) / (@cos(phi) * @cos(p2[1] * math.pi / 180));
     if (A < -1 or A > 1) return [_]f64{ undefined, undefined, undefined }; // Always above/below horizon
-    std.debug.print("A: {d}\n", .{A});
-    const H0 = math.acos(A) * 180 / math.pi; // deg
-    std.debug.print("H0: {d}\n", .{H0});
+    const H0 = math.acos(A) * 180 / math.pi;
 
     var m = (p2[0] + L - Theta0) / 360;
     var m1: f64 = 0;
@@ -224,78 +214,15 @@ pub fn getTimeOfSunTransitRiseSet(jd: f64, get_transit: bool, get_rise: bool, ge
     if (get_transit) {
         m = @rem(m, 1);
         if (m < 0) m += 1;
-
-        if (!settings.use_low_precision_for_sun_transit) {
-            const theta00 = Theta0 + 360.985647 * m;
-            const n = m + DeltaT / 86400;
-            const alpha = p2[0] + n / 2 * ((p2[0] - p1[0]) + (p3[0] - p2[0]) + n * (p1[0] - 2 * p2[0] + p3[0]));
-            const H = @rem((theta00 - L - alpha), 180);
-            const Deltam = -H / 360;
-            m += Deltam;
-        }
     }
     if (get_rise) {
         m1 = @rem((m - H0 / 360), 1);
         if (m1 < 0) m1 += 1;
-
-        if (!settings.use_low_precision_for_sun_transit) {
-            const theta01 = Theta0 + 360.985647 * m1;
-            const n = m1 + DeltaT / 86400;
-            const alpha = p2[0] + n / 2 * ((p2[0] - p1[0]) + (p3[0] - p2[0]) + n * (p1[0] - 2 * p2[0] + p3[0]));
-            const delta = (p2[1] + n / 2 * ((p2[1] - p1[1]) + (p3[1] - p2[1]) + n * (p1[1] - 2 * p2[1] + p3[1]))) * math.pi / 180;
-            const H = theta01 - L - alpha;
-            const h = math.asin(@sin(phi) * @sin(delta) + @cos(phi) * @cos(delta) * @cos(H * math.pi / 180)) * 180 / math.pi;
-            const Deltam = (h - h0) / (360 * @cos(delta) * @cos(phi) * @sin(H * math.pi / 180));
-            m1 += Deltam;
-        }
     }
     if (get_set) {
         m2 = @rem((m + H0 / 360), 1);
         if (m2 < 0) m2 += 1;
-
-        if (!settings.use_low_precision_for_sun_transit) {
-            const theta02 = Theta0 + 360.985647 * m2;
-            const n = m2 + DeltaT / 86400;
-            const alpha = p2[0] + n / 2 * ((p2[0] - p1[0]) + (p3[0] - p2[0]) + n * (p1[0] - 2 * p2[0] + p3[0]));
-            const delta = (p2[1] + n / 2 * ((p2[1] - p1[1]) + (p3[1] - p2[1]) + n * (p1[1] - 2 * p2[1] + p3[1]))) * math.pi / 180;
-            const H = theta02 - L - alpha;
-            const h = math.asin(@sin(phi) * @sin(delta) + @cos(phi) * @cos(delta) * @cos(H * math.pi / 180)) * 180 / math.pi;
-            const Deltam = (h - h0) / (360 * @cos(delta) * @cos(phi) * @sin(H * math.pi / 180));
-            m2 += Deltam;
-        }
     }
 
     return [3]f64{ m, m1, m2 };
-}
-// In s (time sec)
-pub fn getDynamicTimeDifference(jd: f64) f64 {
-    // https://eclipse.gsfc.nasa.gov/SEhelp/deltatpoly2004.html
-
-    const gregorian_date = dates.jdToGregorian(jd);
-    const y = @as(f32, @floatFromInt(gregorian_date.year)) + (@as(f32, @floatFromInt(gregorian_date.month)) - 0.5) / 12;
-
-    if (y >= 1900 and y < 1920) {
-        const t = y - 1900;
-        return -2.79 + 1.494119 * t - 0.0598939 * t * t + 0.0061966 * t * t * t - 0.000197 * t * t * t * t;
-    } else if (y >= 1920 and y < 1941) {
-        const t = y - 1920;
-        return 21.20 + 0.84493 * t - 0.076100 * t * t + 0.0020936 * t * t * t;
-    } else if (y >= 1941 and y < 1961) {
-        const t = y - 1950;
-        return 29.07 + 0.407 * t - t * t / 233 + t * t * t / 2547;
-    } else if (y >= 1961 and y < 1986) {
-        const t = y - 1975;
-        return 45.45 + 1.067 * t - t * t / 260 - t * t * t / 718;
-    } else if (y >= 1986 and y < 2005) {
-        const t = y - 2000;
-        return 63.86 + 0.3345 * t - 0.060374 * t * t + 0.0017275 * t * t * t + 0.000651814 * t * t * t * t + 0.00002373599 * t * t * t * t * t;
-    } else if (y >= 2005 and y < 2050) {
-        const t = y - 2000;
-        return 62.92 + 0.32217 * t + 0.005589 * t * t;
-    } else if (y >= 2050 and y < 2150) {
-        return -20 + 32 * math.pow(f32, ((y - 1820) / 100), 2) - 0.5628 * (2150 - y);
-    }
-    return 100;
-    // _ = jd;
-    // return 69.1471;
 }

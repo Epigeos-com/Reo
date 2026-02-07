@@ -1,6 +1,14 @@
+# Output
 .zig-cache
-out
+zig-out
 
+# Init files
+include
+lib
+build.zig
+android.sh
+
+# Android files
 android/.gradle
 android/local.properties
 android/build/reports

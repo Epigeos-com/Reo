@@ -1,46 +1,43 @@
-// For 1.0:
-Make time of day and properdate work
+// Priority:
 fix leaks
 
-Add app version checks
-Add translations
+Add app version checks and a welcome card
 
-Repair complex  events
-Add solstice events
+Allow events to change month num in years with intercalatory months
+Switching calendars still sometimes causes problems
 
-Add empty boxes at beginning of month too / add days of the week
+Investigate the text artifacts on linux
+
+Think about the time of day of an event's jd and marked time of day
+
+Semi-transparent rounded rects still cause problems
+Decide on fonts
+
+Add more info to settings, geolocation
+
+Make go to work with months, add calendar selection
+Estimate what range of dates the astronomy calculations are good for
+Check if there's any cases where e.g. the new moon is really close to the sunrise, which could cause one-day-off issues due to imprecision
+Make text input work with pasting
+
 Add timezone support
 Add notifications
 
-Update navbar color to new background
-Style inputs
-Make dialog close button thinner
-Update info tab
-Make lightnode more brown
+// Secondary:
+Add days of the week
+Add a clock section
+Add all events screen
+Add event descriptions
 
-Update settings saving and loading for new parameters and order
-?Cache for date info
-?Add all events screen
-
-Add timezone support
-
-// For 1.1 (or later):
+Add more formatting options, such as the academic notation of Ol.700.4, fractional hours
 Show season
 Add alternative numerals related to the calendars
 Add the date in different calendars to day view
-Add themes
 Add eclipse events
-Add event descriptions
-Add theme switching based on events
-Add twlilights, star visibility, moon phase, etc. in day view
-Add a clock section
-Add iCalendar import and export
+Add iCalendar and/or custom format import and export
 
-// Known issues:
-Pressing esc on settings before an input field is unselected/unclicked leads to it being assigned to a var after the StateHasChanged() runs, so it doesn't update on the page (that's just a guess for why)
-Setting latitude and longitude to current location needs at least two clicks of the button, which seems to be caused by how geolocation works, but tough to tell
-
-
+?Add twlilights, star visibility, moon phase, etc. in day view
+?Add caching
 
 // Next calendar ideas:
 Julian
