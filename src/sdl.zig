@@ -35,7 +35,7 @@ var font_cantarell: ?*sdl.TTF_Font = undefined;
 var font_piazzolla: ?*sdl.TTF_Font = undefined;
 var font_piazzolla_sc: ?*sdl.TTF_Font = undefined;
 
-const ButtonStruct = struct { rect: sdl.SDL_FRect, function_id: u8, arg: struct { toggleDay_date: ?f64 = null, text_input_font_size: ?f32 = null, text_input_id: ?[]const u8 = null, toggleDialog_id: ?u8 = null, dropdown_input_options: ?[]const []const u8 = null, dropdown_option_value: ?[]const u8 = null, bool_input_value: ?*bool = null } = undefined };
+const ButtonStruct = struct { rect: sdl.SDL_FRect, function_id: u8, arg: struct { toggleDay_date: ?f64 = null, text_input_font_size: ?f32 = null, text_input_id: ?[]const u8 = null, toggleDialog_id: ?u8 = null, dropdown_input_options: ?[]const []const u8 = null, not_installed_dropdown_input_options: ?[]const []const u8 = null, dropdown_option_value: ?[]const u8 = null, bool_input_value: ?*bool = null } = undefined };
 var buttons = std.ArrayList(ButtonStruct).init(manager.allocator);
 fn isMouseWithinRect(mouse_x: f32, mouse_y: f32, rect: sdl.SDL_FRect) bool {
     return !((mouse_x < rect.x) or (mouse_x > rect.x + rect.w) or (mouse_y < rect.y) or (mouse_y > rect.y + rect.h));
@@ -82,7 +82,7 @@ pub fn main() void {
     font_piazzolla_sc = sdl.TTF_OpenFontIO(sdl.SDL_IOFromConstMem(@constCast(file_piazzolla_sc_thin), file_piazzolla_sc_thin.len), true, 64);
     if (font_piazzolla_sc == null) sdl.SDL_LogCritical(sdl.SDL_LOG_CATEGORY_APPLICATION, sdl.SDL_GetError());
 
-    manager.initApp() catch sdl.SDL_LogCritical(sdl.SDL_LOG_CATEGORY_APPLICATION, "Failed to manager.initApp().");
+    manager.initApp() catch |e| std.debug.print("Failed to manager.initApp(): {}\n", .{e});
     defer manager.deinitApp();
 
     var event: sdl.SDL_Event = undefined;
@@ -108,7 +108,8 @@ pub fn main() void {
             } else if (event.type == sdl.SDL_EVENT_MOUSE_BUTTON_UP) {
                 var was_a_button_triggered = false;
                 if (current_text_input != null and current_text_input.?.arg.dropdown_input_options == null) confirmTextInput(); // Text input is active, but it's not a dropdown
-                for (buttons.items) |button| {
+                for (0..buttons.items.len) |i| {
+                    const button = buttons.items[buttons.items.len - i - 1];
                     if (isMouseWithinRect(event.button.x, event.button.y, button.rect)) {
                         switch (button.function_id) {
                             0 => view.toggleDay(button.arg.toggleDay_date.?),
@@ -138,6 +139,8 @@ pub fn main() void {
                     if (view.open_dialog == 0) view.changeDateByOneUnit(false);
                 } else if (event.key.key == sdl.SDLK_RIGHT) {
                     if (view.open_dialog == 0) view.changeDateByOneUnit(true);
+                } else if (event.key.key == sdl.SDLK_S) {
+                    view.toggleDialog(view.dialog_settings_general);
                 } else if (event.key.key == sdl.SDLK_ESCAPE) {
                     if (view.open_dialog != 0) {
                         view.toggleDialog(view.open_dialog);
@@ -160,14 +163,11 @@ pub fn main() void {
                     } else if (event.key.key == sdl.SDLK_BACKSPACE) {
                         _ = current_text_input_value.pop();
                         updateView();
-                    } else if (event.key.key == sdl.SDLK_V) {
-                        std.debug.print("sdgfsdf: {d}, {d}\n", .{ sdl.SDL_GetModState(), sdl.SDL_KMOD_CTRL });
+                    } else if (event.key.key == sdl.SDLK_V and sdl.SDL_GetModState() & sdl.SDL_KMOD_CTRL != 0) {
                         const text = std.mem.span(sdl.SDL_GetClipboardText());
                         current_text_input_value.appendSlice(text) catch std.debug.panic("OOM", .{});
                         updateView();
                     }
-                } else if (event.key.key == sdl.SDLK_S) { // TODO: Remove this and add a button for opening settings
-                    view.toggleDialog(view.dialog_settings_general);
                 }
             } else if (event.type == sdl.SDL_EVENT_TEXT_INPUT) {
                 const text = std.mem.span(event.text.text);
@@ -275,6 +275,8 @@ fn renderMonthView() void {
         _ = sdl.TTF_SetFontSize(font_cantarell, reference_font_size * 0.8);
         _ = renderEventList(events_for_day, .{ .x = @intFromFloat(@round((float_i - @as(f32, @floatFromInt(row_number * view.current_date_info.row_size))) * w)), .y = @intFromFloat(@round(text_y + text_height_float) + 2), .w = @intFromFloat(@round(w)), .h = @intFromFloat(@round(0.95 * h - text_height_float)) });
     }
+
+    renderSideBar();
 }
 fn renderDayView() void {
     _ = sdl.SDL_SetRenderDrawColor(ren, color_background[0], color_background[1], color_background[2], color_background[3]);
@@ -282,27 +284,27 @@ fn renderDayView() void {
 
     var current_y = renderCalendarTopBar();
 
+    var text_width: c_int = undefined;
+    var text_height: c_int = undefined;
+    _ = sdl.TTF_SetFontSize(font_baloo2, reference_font_size * 2);
+
+    if (settings.primary_calendar == .Gregorian) { // TODO: Choose a better font
+        const sun_trs_days = astronomy.getTimeOfSunTransitRiseSet(view.current_jd, true, true, true);
+        var sun_trs_dates = [3]dates.Date{ view.current_date_info.main_date, view.current_date_info.main_date, view.current_date_info.main_date };
+        sun_trs_dates[0].day += sun_trs_days[0] + settings.utc_offset / 24;
+        sun_trs_dates[1].day += sun_trs_days[1] + settings.utc_offset / 24;
+        sun_trs_dates[2].day += sun_trs_days[2] + settings.utc_offset / 24;
+
+        const sun_position_text_value = std.fmt.allocPrint(manager.allocator, "{s}: {t}; {s}: {t}; {s}: {t}", .{ tl("Sunrise"), sun_trs_dates[1], tl("Transit"), sun_trs_dates[0], tl("Sunset"), sun_trs_dates[2] }) catch std.debug.panic("OOM", .{});
+        const sun_position_text = sdl.TTF_CreateText(text_engine, font_baloo2, @ptrCast(sun_position_text_value.ptr), sun_position_text_value.len);
+        _ = sdl.TTF_SetTextColor(sun_position_text, color_contrast[0], color_contrast[1], color_contrast[2], color_contrast[3]);
+        _ = sdl.TTF_GetTextSize(sun_position_text, &text_width, &text_height);
+        _ = sdl.TTF_DrawRendererText(sun_position_text, (width - @as(f32, @floatFromInt(text_width))) / 2, current_y);
+        current_y += @floatFromInt(text_height);
+    }
+
     const events_for_day = view.events_for_month[@intFromFloat(view.current_jd - view.current_date_info.first_of_the_month_jd)];
     if (events_for_day.len != 0) {
-        var text_width: c_int = undefined;
-        var text_height: c_int = undefined;
-        _ = sdl.TTF_SetFontSize(font_baloo2, reference_font_size * 2);
-
-        if (settings.primary_calendar == .Gregorian) { // TODO: Choose a better font
-            const sun_trs_days = astronomy.getTimeOfSunTransitRiseSet(view.current_jd, true, true, true);
-            var sun_trs_dates = [3]dates.Date{ view.current_date_info.main_date, view.current_date_info.main_date, view.current_date_info.main_date };
-            sun_trs_dates[0].day += sun_trs_days[0] + settings.utc_offset / 24;
-            sun_trs_dates[1].day += sun_trs_days[1] + settings.utc_offset / 24;
-            sun_trs_dates[2].day += sun_trs_days[2] + settings.utc_offset / 24;
-
-            const sun_position_text_value = std.fmt.allocPrint(manager.allocator, "{s}: {t}; {s}: {t}; {s}: {t}", .{ tl("Sunrise"), sun_trs_dates[1], tl("Transit"), sun_trs_dates[0], tl("Sunset"), sun_trs_dates[2] }) catch std.debug.panic("OOM", .{});
-            const sun_position_text = sdl.TTF_CreateText(text_engine, font_baloo2, @ptrCast(sun_position_text_value.ptr), sun_position_text_value.len);
-            _ = sdl.TTF_SetTextColor(sun_position_text, color_contrast[0], color_contrast[1], color_contrast[2], color_contrast[3]);
-            _ = sdl.TTF_GetTextSize(sun_position_text, &text_width, &text_height);
-            _ = sdl.TTF_DrawRendererText(sun_position_text, (width - @as(f32, @floatFromInt(text_width))) / 2, current_y);
-            current_y += @floatFromInt(text_height);
-        }
-
         const events_text = sdl.TTF_CreateText(text_engine, font_baloo2, @ptrCast(tl("Events").ptr), tl("Events").len);
         _ = sdl.TTF_SetTextColor(events_text, color_contrast[0], color_contrast[1], color_contrast[2], color_contrast[3]);
         _ = sdl.TTF_GetTextSize(events_text, &text_width, &text_height);
@@ -312,6 +314,8 @@ fn renderDayView() void {
         _ = sdl.TTF_SetFontSize(font_cantarell, reference_font_size * 1.3);
         current_y += renderEventList(events_for_day, .{ .x = 0, .y = @intFromFloat(@round(current_y)), .w = @intFromFloat(@round(width)), .h = @intFromFloat(@round(height - current_y)) });
     }
+
+    renderSideBar();
 }
 // Returns height of top bar
 fn renderCalendarTopBar() f32 {
@@ -396,6 +400,14 @@ fn renderEventList(evs: []const []const u8, available_rect: sdl.SDL_Rect) f32 {
 
     _ = sdl.SDL_SetRenderViewport(ren, original_render_viewport);
     return current_y;
+}
+fn renderSideBar() void { // TODO
+    const radius = reference_font_size / 2.5;
+    const rect: sdl.SDL_FRect = .{ .x = width + radius - reference_font_size * 2, .y = (height - reference_font_size * 10) / 2, .w = reference_font_size * 2, .h = reference_font_size * 10 };
+    _ = sdl.SDL_SetRenderDrawColor(ren, color_bright_background[0], color_bright_background[1], color_bright_background[2], color_bright_background[3]);
+    renderRoundedRect(&rect, radius);
+
+    buttons.append(.{ .rect = rect, .function_id = 4, .arg = .{ .toggleDialog_id = view.dialog_settings_general } }) catch std.debug.panic("OOM", .{});
 }
 
 // Dialogs
@@ -488,10 +500,9 @@ fn renderSettingsDialog(dialog_id: u8) void {
     const calendar_type_fields = std.meta.fieldNames(dates.CalendarType);
     var calendar_type_field_names = std.ArrayList([]const u8).init(manager.allocator);
 
-    const language_dropdown_options = manager.allocator.alloc([]const u8, manager.translation_options.?.len + 2) catch std.debug.panic("OOM", .{});
-    language_dropdown_options[0] = "eng";
-    @memcpy(language_dropdown_options[1 .. language_dropdown_options.len - 1], manager.translation_options.?);
-    language_dropdown_options[language_dropdown_options.len - 1] = tl("Download more language packs"); // TODO: Make this work
+    const installed_language_dropdown_options = manager.allocator.alloc([]const u8, manager.installed_translation_options.?.len + 1) catch std.debug.panic("OOM", .{});
+    installed_language_dropdown_options[0] = "eng";
+    @memcpy(installed_language_dropdown_options[1..installed_language_dropdown_options.len], manager.installed_translation_options.?); // TODO: Add option to download more language packs
 
     for (calendar_type_fields) |field| calendar_type_field_names.append(tl(field)) catch std.debug.panic("OOM", .{});
     if (dialog_id == view.dialog_settings_general) {
@@ -578,12 +589,13 @@ fn renderSettingsDialog(dialog_id: u8) void {
         _ = renderLabel(label_rect, tl("Language"), label_font_size);
         current_y += label_rect.h;
         input_rect.y = current_y;
-        renderDropdownInput(
+        renderInstallsDropdownInput(
             input_rect,
             settings.language orelse "eng",
             input_font_size,
             "settings_language",
-            language_dropdown_options,
+            installed_language_dropdown_options,
+            manager.not_installed_translation_options.?,
         );
         current_y += input_rect.h + input_margin;
 
@@ -730,6 +742,10 @@ fn renderDropdownInput(rect: sdl.SDL_FRect, value: []const u8, font_size: f32, i
     const button: ButtonStruct = .{ .rect = rect, .function_id = 3, .arg = .{ .text_input_font_size = font_size, .text_input_id = id, .dropdown_input_options = dropdown_options } };
     renderTextInputFromButton(value, false, button);
 }
+fn renderInstallsDropdownInput(rect: sdl.SDL_FRect, value: []const u8, font_size: f32, id: []const u8, installed_dropdown_options: []const []const u8, not_installed_dropdown_options: []const []const u8) void {
+    const button: ButtonStruct = .{ .rect = rect, .function_id = 3, .arg = .{ .text_input_font_size = font_size, .text_input_id = id, .dropdown_input_options = installed_dropdown_options, .not_installed_dropdown_input_options = not_installed_dropdown_options } };
+    renderTextInputFromButton(value, false, button);
+}
 fn renderLabel(rect: sdl.SDL_FRect, value: []const u8, font_size: f32) *sdl.TTF_Text {
     _ = sdl.TTF_SetFontSize(font_cantarell, font_size);
     const label_text = sdl.TTF_CreateText(text_engine, font_cantarell, @ptrCast(value.ptr), value.len);
@@ -823,7 +839,7 @@ pub fn confirmTextInput() void {
                     manager.allocator.free(settings.language.?);
                     settings.language = null;
                 }
-            } else if (manager.indexOfStringArray(manager.translation_options.?, current_text_input_value.items) != null) {
+            } else if (manager.indexOfStringArray(manager.installed_translation_options.?, current_text_input_value.items) != null) {
                 if (settings.language != null) {
                     manager.allocator.free(settings.language.?);
                     settings.language = null;

@@ -67,7 +67,7 @@ pub fn loadSettings() !void {
             } else if (std.mem.eql(u8, last_setting_name, "utc_offset")) {
                 utc_offset = std.fmt.parseFloat(f64, line) catch utc_offset;
             } else if (std.mem.eql(u8, last_setting_name, "language")) {
-                if (line.len != 0 and manager.indexOfStringArray(manager.translation_options.?, line) != null) {
+                if (line.len != 0 and manager.indexOfStringArray(manager.installed_translation_options.?, line) != null) {
                     language = try manager.allocator.alloc(u8, line.len);
                     @memcpy(language.?, line);
                 }

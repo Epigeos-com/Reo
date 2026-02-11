@@ -9,8 +9,10 @@ pub var env_dir: std.fs.Dir = undefined;
 
 pub var gpallocator = std.heap.DebugAllocator(.{}).init;
 pub const allocator = gpallocator.allocator();
+pub var http_client = std.http.Client{ .allocator = allocator };
 
-pub var translation_options: ?[][]const u8 = null;
+pub var installed_translation_options: ?[][]const u8 = null;
+pub var not_installed_translation_options: ?[][]const u8 = null;
 var dictionary_english: ?[][]const u8 = null;
 var dictionary_translated: ?[][]const u8 = null;
 
@@ -51,9 +53,9 @@ pub fn initApp() !void {
     try settings.loadSettings();
 }
 pub fn deinitApp() void {
-    if (translation_options != null) {
-        for (translation_options.?) |element| allocator.free(element);
-        allocator.free(translation_options.?);
+    if (installed_translation_options != null) {
+        for (installed_translation_options.?) |element| allocator.free(element);
+        allocator.free(installed_translation_options.?);
     }
     if (dictionary_english != null) {
         for (dictionary_english.?) |element| allocator.free(element);
@@ -73,13 +75,15 @@ pub fn deinitApp() void {
     allocator.free(settings.language.?);
     allocator.free(settings.disabled_event_categories);
 
+    http_client.deinit();
+
     // _ = gpallocator.detectLeaks();
     // _ = gpallocator.deinit();
 }
 pub fn refreshTranslationOptions() !void {
-    if (translation_options != null) {
-        for (translation_options.?) |element| allocator.free(element);
-        allocator.free(translation_options.?);
+    if (installed_translation_options != null) {
+        for (installed_translation_options.?) |element| allocator.free(element);
+        allocator.free(installed_translation_options.?);
     }
 
     const translations_dir = try env_dir.openDir("translations", .{ .iterate = true });
@@ -88,7 +92,7 @@ pub fn refreshTranslationOptions() !void {
     while (try translations_iterator.next()) |file| {
         try memcpyAppend(file.name, &translation_options_list);
     }
-    translation_options = try translation_options_list.toOwnedSlice();
+    installed_translation_options = try translation_options_list.toOwnedSlice();
 }
 pub fn loadTranslation() !void {
     if (dictionary_english != null) {
