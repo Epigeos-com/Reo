@@ -93,6 +93,27 @@ pub fn refreshTranslationOptions() !void {
         try memcpyAppend(file.name, &translation_options_list);
     }
     installed_translation_options = try translation_options_list.toOwnedSlice();
+
+    const uri = comptime try std.Uri.parse("https://api.github.com/repos/Epigeos-com/Reo/contents/translations");
+    var header_buffer: [4096]u8 = undefined;
+    var req = try http_client.open(.GET, uri, .{ .server_header_buffer = &header_buffer });
+    try req.send();
+    try req.finish();
+    try req.wait();
+    if (req.response.status == .ok) {
+        const response_buffer: []u8 = try allocator.alloc(u8, req.response.content_length orelse 0);
+        _ = try req.readAll(response_buffer);
+        const json = try std.json.parseFromSlice(std.json.Value, allocator, response_buffer, .{});
+        std.debug.print("\n\njson: {any}\n\n", .{json.value.array.items[0].object});
+        // var i: usize = 0;
+        // while (json[i]) |json_element| {
+        //     std.debug.print("json_element: {s}\n", .{json_element});
+        //     i += 1;
+        // }
+    } else {
+        std.debug.print("Error fetching translations: {}\n", .{req.response.status});
+    }
+    req.deinit();
 }
 pub fn loadTranslation() !void {
     if (dictionary_english != null) {
