@@ -47,7 +47,7 @@ pub fn initApp() !void {
     }
     settings_file.close();
     env_dir.makeDir("translations") catch |err| if (err != error.PathAlreadyExists) return err;
-    try refreshTranslationOptions();
+    refreshTranslationOptions() catch |err| std.debug.print("Error fetching translation options: {}\n", .{err});
 
     view.current_jd = dates.now();
     try settings.loadSettings();
@@ -85,8 +85,13 @@ pub fn refreshTranslationOptions() !void {
         for (installed_translation_options.?) |element| allocator.free(element);
         allocator.free(installed_translation_options.?);
     }
+    if (not_installed_translation_options != null) {
+        for (not_installed_translation_options.?) |element| allocator.free(element);
+        allocator.free(not_installed_translation_options.?);
+    }
 
-    const translations_dir = try env_dir.openDir("translations", .{ .iterate = true });
+    var translations_dir = try env_dir.openDir("translations", .{ .iterate = true });
+    defer translations_dir.close();
     var translations_iterator = translations_dir.iterateAssumeFirstIteration();
     var translation_options_list = std.ArrayList([]const u8).init(allocator);
     while (try translations_iterator.next()) |file| {
@@ -95,25 +100,29 @@ pub fn refreshTranslationOptions() !void {
     installed_translation_options = try translation_options_list.toOwnedSlice();
 
     const uri = comptime try std.Uri.parse("https://api.github.com/repos/Epigeos-com/Reo/contents/translations");
-    var header_buffer: [4096]u8 = undefined;
-    var req = try http_client.open(.GET, uri, .{ .server_header_buffer = &header_buffer });
-    try req.send();
-    try req.finish();
-    try req.wait();
-    if (req.response.status == .ok) {
-        const response_buffer: []u8 = try allocator.alloc(u8, req.response.content_length orelse 0);
-        _ = try req.readAll(response_buffer);
-        const json = try std.json.parseFromSlice(std.json.Value, allocator, response_buffer, .{});
-        std.debug.print("\n\njson: {any}\n\n", .{json.value.array.items[0].object});
-        // var i: usize = 0;
-        // while (json[i]) |json_element| {
-        //     std.debug.print("json_element: {s}\n", .{json_element});
-        //     i += 1;
-        // }
-    } else {
-        std.debug.print("Error fetching translations: {}\n", .{req.response.status});
+    const response = try sendHttpRequest(allocator, uri, 4096);
+    defer allocator.free(response);
+    const json: std.json.Parsed(std.json.Value) = try std.json.parseFromSlice(std.json.Value, allocator, response, .{});
+    var not_installed_translation_options_list = std.ArrayList([]const u8).init(allocator);
+    for (json.value.array.items) |item| {
+        const name = item.object.get("name").?.string;
+        if (translations_dir.statFile(name) catch null) |stat| {
+            if (stat.size != item.object.get("size").?.integer) try downloadTranslation(name);
+        } else {
+            try memcpyAppend(name, &not_installed_translation_options_list);
+        }
     }
-    req.deinit();
+    not_installed_translation_options = try not_installed_translation_options_list.toOwnedSlice();
+    json.deinit();
+}
+pub fn downloadTranslation(lang: []const u8) !void {
+    const url = try std.fmt.allocPrint(allocator, "https://raw.githubusercontent.com/Epigeos-com/Reo/master/translations/{s}", .{lang});
+    std.debug.print("downloadTranslation: {s}, {s}\n", .{ lang, url });
+    defer allocator.free(url);
+    const uri = try std.Uri.parse(url);
+    const response = try sendHttpRequest(allocator, uri, 2048);
+    defer allocator.free(response);
+    std.debug.print("downloadTranslation: {s}; {s}\n", .{ lang, response });
 }
 pub fn loadTranslation() !void {
     if (dictionary_english != null) {
@@ -174,4 +183,19 @@ pub fn memcpyAppend(array: anytype, list_of_arrays: *std.ArrayList(@TypeOf(array
     const alloc = try list_of_arrays.allocator.alloc(@TypeOf(array[0]), array.len);
     @memcpy(alloc, array);
     try list_of_arrays.append(alloc);
+}
+pub fn sendHttpRequest(allocator_: std.mem.Allocator, uri: std.Uri, comptime header_buffer_size: usize) ![]u8 {
+    var header_buffer: [header_buffer_size]u8 = undefined;
+    var req = try http_client.open(.GET, uri, .{ .server_header_buffer = &header_buffer });
+    defer req.deinit();
+    try req.send();
+    try req.finish();
+    try req.wait();
+    if (req.response.status == .ok) {
+        const response_buffer: []u8 = try allocator_.alloc(u8, req.response.content_length orelse 0);
+        _ = try req.readAll(response_buffer);
+        return response_buffer;
+    } else {
+        return error.ResponseStatusNot200;
+    }
 }
